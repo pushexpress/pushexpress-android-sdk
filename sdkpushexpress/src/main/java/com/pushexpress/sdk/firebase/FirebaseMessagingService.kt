@@ -111,7 +111,7 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
 
         Log.d(
             TAG,
-            "Delivered: pxMsgId: " + data.getOrDefault(PX_MSG_ID_KEY) { "empty_id" } +
+            "Delivered: pxMsgId: " + data.getOrElse(PX_MSG_ID_KEY) { "empty_id" } +
                     " notificationId: $notificationId")
 
         notificationManager.notify(notificationId, notificationBuilder.build())
