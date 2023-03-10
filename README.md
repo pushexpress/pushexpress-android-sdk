@@ -3,16 +3,18 @@
 ### Step 1. Requirements
 
 - Push.Express Account with registered App
-  
+
 - Firebase Account with registered App
-  
 
 ### Step 2. Add the JitPack repository to your build file
 
-Open your App `build.gradle (Module: app)` file, add the following to your `dependencies` section:
+If you use Gradle [Centralized Repository Declaration](https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:centralized-repository-declaration) feature (default for new projects in Androd Studio Electric Eel), in your `settings.gradle`, add the Jitpack repo to repositories list:
 
 ```groovy
-allprojects {
+// settings.gradle (Project Settings) in Android Studio
+...
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         ...
         maven { url 'https://jitpack.io' }
@@ -20,15 +22,33 @@ allprojects {
 }
 ```
 
-### Step 3. Add the dependency
+Alternatively, if you use old `allprojects` style, in your **root-level (project-level)** Gradle file (`<project>/build.gradle`), add the Jitpack repo to repositories list:
 
 ```groovy
+// build.gradle (Project: My_Application) in Android Studio
+...
+allprojects {
+    repositories {
+        ...
+        maven { url "https://jitpack.io" }
+    }
+}
+```
+
+### Step 3. Add the dependency
+
+In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle`), add the pushexpress-android-sdk dependency:
+
+```groovy
+// build.gradle (Module :app) in Android Studio
+...
 dependencies {
+    ...
     implementation 'com.github.pushexpress:pushexpress-android-sdk:x.y.z'
 }
 ```
 
-Where x.y.z is latest tag from [Tags](https://github.com/pushexpress/pushexpress-android-sdk/tags)
+where x.y.z is latest tag from [Tags](https://github.com/pushexpress/pushexpress-android-sdk/tags), like `1.0.1`
 
 ### Step 4. Add required code
 
@@ -54,10 +74,9 @@ class MainActivity : AppCompatActivity() {
 
 ### Step 5. Setup Firebase
 
-- Get `google-services.json` from your Firebase Console and save to app module dir (like app/google-services.json)
-  
-- Follow guides for App configuration with SDK: https://push.express
-  
+- Follow Firebase Cloud Messaging [Android guide](https://firebase.google.com/docs/android/setup#console)
+
+- Follow PushExpress [SDK App configuration guide](https://push.express) to connect your PushExpress App with Firebase Cloud Messaging
 
 ### Step 6. Ask for notification permissions
 
@@ -102,3 +121,5 @@ class MainActivity : AppCompatActivity() {
 ```
 
 ### Step 7. Build and try to send push
+Use [PushExpress Documentation](https://push.express) to learn how to view app installs
+on your devices and send notifications.
