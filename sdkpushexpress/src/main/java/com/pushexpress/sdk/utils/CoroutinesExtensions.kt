@@ -27,3 +27,16 @@ suspend fun <T> retryHttpIO(
     Log.d("retryHttpIO", "last run whatever happens ...")
     return block()
 }
+
+
+inline fun <reified T : Any?> getBy(value: Boolean, primary: T, secondary: T): T =
+    if (value) primary else secondary
+
+inline fun <reified T : Any?> getBy(value: () -> Boolean, primary: T, secondary: T): T =
+    if (value()) primary else secondary
+
+inline fun <reified T : Any?> getBy(value: () -> Boolean, primary: () -> T, secondary: () -> T): T =
+    if (value()) primary() else secondary()
+
+inline fun <reified T : Any?> getBy(value: Boolean, primary: () -> T, secondary: () -> T): T =
+    if (value) primary() else secondary()

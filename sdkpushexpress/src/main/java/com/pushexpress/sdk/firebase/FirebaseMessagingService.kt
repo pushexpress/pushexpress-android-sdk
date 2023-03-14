@@ -16,8 +16,11 @@ import coil.request.ImageRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.pushexpress.sdk.R
+import com.pushexpress.sdk.common.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
+import com.pushexpress.sdk.trampoline_activity.TrampolineActivity
+import com.pushexpress.sdk.utils.getBy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -27,15 +30,15 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         SdkPushExpress.sdkSettings.saveFirebaseToken(token)
-        Log.d(TAG, "onNewToken: token=${token}")
+        Log.d(SDK_TAG, "onNewToken: token=${token}")
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        Log.d(TAG, "From: ${remoteMessage.from}")
+        Log.d(SDK_TAG, "From: ${remoteMessage.from}")
 
         // Check if message contains a data payload.
         if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
+            Log.d(SDK_TAG, "Message data payload: ${remoteMessage.data}")
         }
 
         sendNotification(remoteMessage.data)
@@ -48,32 +51,52 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
 
         val intent = Intent(
             applicationContext,
-            NotificationClickBroadcastReceiver::class.java
+            getBy(
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.S,
+                NotificationClickBroadcastReceiver::class.java,
+                TrampolineActivity::class.java
+            )
         ).also { intent ->
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             intent.action = INTENT_ACTION_CLICK
             data[PX_MSG_ID_KEY]?.let { intent.putExtra(EXTRA_PX_MSG_ID, it) }
             data[PX_LINK_KEY]?.let { intent.putExtra(EXTRA_PX_LINK, it) }
         }
 
-        val pendingIntent = PendingIntent.getBroadcast(
-            this.applicationContext, notificationId, intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val pendingIntent = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            PendingIntent.getBroadcast(
+                this.applicationContext, notificationId, intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else {
+            PendingIntent.getActivity(
+                this.applicationContext, notificationId, intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
 
-        val imageDisp = SdkPushExpress.imageLoader.enqueue(ImageRequest.Builder(this)
-            .data(data[PX_IMAGE_KEY])
-            .build())
-        val iconDisp = SdkPushExpress.imageLoader.enqueue(ImageRequest.Builder(this)
-            .data(data[PX_ICON_KEY])
-            .build())
+        val imageDisp = SdkPushExpress.imageLoader.enqueue(
+            ImageRequest.Builder(this)
+                .data(data[PX_IMAGE_KEY])
+                .build()
+        )
+        val iconDisp = SdkPushExpress.imageLoader.enqueue(
+            ImageRequest.Builder(this)
+                .data(data[PX_ICON_KEY])
+                .build()
+        )
 
         var imageBmp: Bitmap? = null
         var iconBmp: Bitmap? = null
         // TODO: timeout in config
-        runBlocking { withTimeoutOrNull(3000) { launch {
-            imageBmp = imageDisp.job.await().drawable?.toBitmap()
-            iconBmp = iconDisp.job.await().drawable?.toBitmap()
-        }}}
+        runBlocking {
+            withTimeoutOrNull(3000) {
+                launch {
+                    imageBmp = imageDisp.job.await().drawable?.toBitmap()
+                    iconBmp = iconDisp.job.await().drawable?.toBitmap()
+                }
+            }
+        }
 
         val channelId = getString(R.string.default_notification_channel_name)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
@@ -85,11 +108,6 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
             .setStyle(NotificationCompat.BigPictureStyle().bigPicture(imageBmp))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .addAction(
-                NotificationCompat.BADGE_ICON_LARGE,
-                "click",
-                pendingIntent
-            )
 
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -110,15 +128,14 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
         )
 
         Log.d(
-            TAG,
-            "Delivered: pxMsgId: " + data.getOrElse(PX_MSG_ID_KEY) { "empty_id" } +
+            SDK_TAG,
+            "Delivered: pxMsgId: " + data.getOrDefault(PX_MSG_ID_KEY) { "empty_id" } +
                     " notificationId: $notificationId")
 
         notificationManager.notify(notificationId, notificationBuilder.build())
     }
 
     companion object {
-        private const val TAG = "SdkPushExpress"
         private const val INTENT_ACTION_CLICK = "com.pushexpress.sdk.ACTION_CLICK"
         private const val PX_TITLE_KEY = "px.title"
         private const val PX_BODY_KEY = "px.body"
