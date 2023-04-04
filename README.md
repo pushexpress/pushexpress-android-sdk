@@ -44,11 +44,9 @@ In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle
 ...
 dependencies {
     ...
-    implementation 'com.github.pushexpress:pushexpress-android-sdk:x.y.z'
+    implementation 'com.github.pushexpress:pushexpress-android-sdk:1.0.2'
 }
 ```
-
-where x.y.z is latest tag from [Tags](https://github.com/pushexpress/pushexpress-android-sdk/tags), like `1.0.1`
 
 ### Step 4. Add required code
 
