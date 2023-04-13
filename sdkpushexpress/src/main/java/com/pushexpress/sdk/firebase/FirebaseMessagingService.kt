@@ -104,10 +104,13 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
             .setContentText(data.getOrElse(PX_BODY_KEY) { "empty_body" })
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
             .setSmallIcon(androidx.loader.R.drawable.notification_icon_background)
-            .setLargeIcon(iconBmp)
-            .setStyle(NotificationCompat.BigPictureStyle().bigPicture(imageBmp))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+
+        iconBmp?.let {notificationBuilder
+            .setLargeIcon(iconBmp) }
+        imageBmp?.let{notificationBuilder
+            .setStyle(NotificationCompat.BigPictureStyle().bigPicture(imageBmp))}
 
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
