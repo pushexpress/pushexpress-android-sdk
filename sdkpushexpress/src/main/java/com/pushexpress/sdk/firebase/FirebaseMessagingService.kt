@@ -106,6 +106,7 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
             .setSmallIcon(androidx.loader.R.drawable.notification_icon_background)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle())
 
         iconBmp?.let {notificationBuilder
             .setLargeIcon(iconBmp) }
