@@ -27,16 +27,9 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
 
     init {
         runBlocking {
-            if (isSdkWasNotInitialized()) {
-                context.dataStore.edit { settings ->
-                    settings[instanceToken] = UUID.randomUUID().toString()
-                    settings[installTs] = System.currentTimeMillis() / 1000
-                    settings[appId] = ""
-                    settings[extId] = ""
-                    settings[onscreenCnt] = 0
-                    settings[onscreenSec] = 0
-                    settings[resumedTs] = 0
-                    settings[stoppedTs] = 0
+            context.dataStore.edit { settings ->
+                if (settings[instanceToken] == null) {
+                    zeroSettings(settings)
                 }
             }
         }
@@ -54,7 +47,15 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
 
     override suspend fun savePushExpressAppId(pushExpressAppId: String) {
         context.dataStore.edit { settings ->
-            settings[this.appId] = pushExpressAppId
+            if (settings[instanceToken].orEmpty().isEmpty() ||
+                settings[this.appId] != pushExpressAppId
+            ) {
+                zeroSettings(settings)
+                genNewInstall(settings, pushExpressAppId)
+                Log.d(TAG, "generate install with new appId: $pushExpressAppId")
+            } else {
+                Log.d(TAG, "got appId with existing install")
+            }
         }
     }
 
@@ -88,7 +89,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                 it[installTs] ?: 0,
                 it[appId].orEmpty(),
                 it[extId].orEmpty(),
-                firebaseToken,
+                firebaseToken, // not .orEmpty!!! ApiRepositoryImpl relies on null =(
                 it[onscreenCnt] ?: 0,
                 it[onscreenSec] ?: 0,
                 it[resumedTs] ?: 0,
@@ -97,7 +98,26 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         }.first()
     }
 
-    private suspend fun isSdkWasNotInitialized() = context.dataStore.data.first()[instanceToken] == null
+    private fun zeroSettings(settings: MutablePreferences) {
+        settings.apply {
+            this[instanceToken] = ""
+            this[installTs] = 0
+            this[appId] = ""
+            this[extId] = ""
+            this[onscreenCnt] = 0
+            this[onscreenSec] = 0
+            this[resumedTs] = 0
+            this[stoppedTs] = 0
+        }
+    }
+
+    private fun genNewInstall(settings: MutablePreferences, pxAppId: String) {
+        settings.apply {
+            this[instanceToken] = UUID.randomUUID().toString()
+            this[installTs] = System.currentTimeMillis() / 1000
+            this[appId] = pxAppId
+        }
+    }
 
     companion object {
         private const val INSTANCE_TOKEN = "ic_token"

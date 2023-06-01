@@ -41,5 +41,7 @@ object SdkPushExpress {
 
     fun getInstanceToken() = runBlocking { sdkSettings.getSdkSettings().instanceToken }
 
+    fun getAppId() = runBlocking { sdkSettings.getSdkSettings().appId }
+
     fun getExternalId() = runBlocking { sdkSettings.getSdkSettings().extId }
 }
