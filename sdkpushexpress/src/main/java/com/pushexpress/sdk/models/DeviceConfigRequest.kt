@@ -12,5 +12,6 @@ data class DeviceConfigRequest(
     val timezone: Int,
     val install_ts: Long,
     val onscreen_cnt: Int,
-    val onscreen_sec: Long
+    val onscreen_sec: Long,
+    val droid_api_ver: Int,
 )

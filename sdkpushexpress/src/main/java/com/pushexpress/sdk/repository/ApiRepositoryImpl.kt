@@ -1,6 +1,7 @@
 package com.pushexpress.sdk.repository
 
 import android.content.Context
+import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import com.google.android.gms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo
@@ -13,6 +14,7 @@ import java.util.*
 
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
+import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -131,7 +133,8 @@ internal class ApiRepositoryImpl(
             fcm_token = sdkSettings.firebaseToken ?: getFirebaseToken(),
             ad_id = advId.orEmpty(),
             onscreen_cnt = sdkSettings.onscreenCnt,
-            onscreen_sec = sdkSettings.onscreenSec
+            onscreen_sec = sdkSettings.onscreenSec,
+            droid_api_ver = Build.VERSION.SDK_INT,
         )
         Log.d(TAG, "deviceConfig: $dc")
         return dc
