@@ -15,7 +15,6 @@ import androidx.core.graphics.drawable.toBitmap
 import coil.request.ImageRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.pushexpress.sdk.R
 import com.pushexpress.sdk.common.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
@@ -98,8 +97,7 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
             }
         }
 
-        val channelId = getString(R.string.default_notification_channel_name)
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle(data.getOrElse(PX_TITLE_KEY) { "empty_title" })
             .setContentText(data.getOrElse(PX_BODY_KEY) { "empty_body" })
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
@@ -119,8 +117,8 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
         // Since android Oreo notification channel is needed.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
-                getString(R.string.default_notification_channel_name),
+                NOTIFICATION_CHANNEL_ID,
+                NOTIFICATION_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
@@ -140,6 +138,8 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
     }
 
     companion object {
+        private const val NOTIFICATION_CHANNEL_ID = "sdkpushexpress_notification_channel"
+        private const val NOTIFICATION_CHANNEL_NAME = "Default"
         private const val INTENT_ACTION_CLICK = "com.pushexpress.sdk.ACTION_CLICK"
         private const val PX_TITLE_KEY = "px.title"
         private const val PX_BODY_KEY = "px.body"

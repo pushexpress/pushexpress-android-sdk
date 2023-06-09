@@ -8,7 +8,7 @@
 
 ### Step 2. Add the JitPack repository to your build file
 
-If you use Gradle [Centralized Repository Declaration](https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:centralized-repository-declaration) feature (default for new projects in Androd Studio Electric Eel), in your `settings.gradle`, add the Jitpack repo to repositories list:
+If you use Gradle [Centralized Repository Declaration](https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:centralized-repository-declaration) feature (default for new projects in Android Studio Electric Eel), in your `settings.gradle`, add the Jitpack repo to repositories list:
 
 ```groovy
 // settings.gradle (Project Settings) in Android Studio
@@ -44,7 +44,7 @@ In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle
 ...
 dependencies {
     ...
-    implementation 'com.github.pushexpress:pushexpress-android-sdk:1.1.0'
+    implementation 'com.github.pushexpress:pushexpress-android-sdk:1.1.1'
 }
 ```
 

@@ -14,7 +14,6 @@ import java.util.*
 
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
-import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
