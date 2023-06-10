@@ -4,6 +4,9 @@ plugins {
     id 'maven-publish'
 }
 
+group = 'com.github.pushexpress'
+version = '1.1.1'
+
 android {
     namespace 'com.github.pushexpress'
     compileSdk 33
@@ -53,4 +56,19 @@ dependencies {
 
     implementation platform('com.google.firebase:firebase-bom:32.1.0')
     implementation 'com.google.firebase:firebase-messaging-ktx'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                artifactId = 'pushexpress-android-sdk'
+            }
+        }
+        repositories {
+            mavenLocal()
+        }
+    }
 }
