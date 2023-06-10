@@ -44,7 +44,7 @@ In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle
 ...
 dependencies {
     ...
-    implementation 'com.github.pushexpress:pushexpress-android-sdk:1.1.1'
+    implementation 'com.github.pushexpress:pushexpress-android-sdk:1.1.3'
 }
 ```
 
