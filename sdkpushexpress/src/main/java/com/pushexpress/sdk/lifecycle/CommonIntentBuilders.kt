@@ -1,4 +1,4 @@
-package com.pushexpress.sdk.common
+package com.pushexpress.sdk.lifecycle
 
 import android.content.Context
 import android.content.Intent

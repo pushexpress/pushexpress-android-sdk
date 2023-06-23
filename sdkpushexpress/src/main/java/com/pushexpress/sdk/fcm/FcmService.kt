@@ -16,6 +16,7 @@ import coil.request.ImageRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.lifecycle.NotificationClickBroadcastReceiver
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent

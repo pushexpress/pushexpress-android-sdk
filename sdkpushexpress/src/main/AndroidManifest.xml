@@ -25,7 +25,7 @@
         </service>
 
         <receiver
-            android:name="com.pushexpress.sdk.fcm.NotificationClickBroadcastReceiver"
+            android:name="com.pushexpress.sdk.lifecycle.NotificationClickBroadcastReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

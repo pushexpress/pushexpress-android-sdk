@@ -1,4 +1,4 @@
-package com.pushexpress.sdk.fcm
+package com.pushexpress.sdk.lifecycle
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -8,7 +8,6 @@ import android.os.IBinder
 import android.util.Log
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
-import com.pushexpress.sdk.common.startDefaultActivity
 import com.pushexpress.sdk.fcm.FcmService.Companion.EXTRA_PX_MSG_ID
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent

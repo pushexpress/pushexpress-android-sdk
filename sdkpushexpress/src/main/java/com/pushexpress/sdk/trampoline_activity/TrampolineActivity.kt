@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
-import com.pushexpress.sdk.common.startDefaultActivity
+import com.pushexpress.sdk.lifecycle.startDefaultActivity
 import com.pushexpress.sdk.fcm.FcmService
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
