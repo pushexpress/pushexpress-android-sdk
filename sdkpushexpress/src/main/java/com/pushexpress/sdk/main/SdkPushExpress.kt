@@ -2,6 +2,7 @@ package com.pushexpress.sdk.main
 
 import coil.ImageLoader
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
+import com.pushexpress.sdk.notification.NotificationDrawer
 import com.pushexpress.sdk.repository.ApiRepository
 import kotlinx.coroutines.*
 
@@ -16,6 +17,7 @@ object SdkPushExpress {
     internal lateinit var sdkApi: ApiRepository
     internal lateinit var sdkSettings: SdkSettingsRepository
     internal lateinit var imageLoader: ImageLoader
+    internal lateinit var notificationDrawer: NotificationDrawer
 
     internal fun start() {
         scope.launch {

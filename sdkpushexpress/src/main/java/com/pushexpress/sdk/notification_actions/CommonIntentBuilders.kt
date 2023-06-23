@@ -1,4 +1,4 @@
-package com.pushexpress.sdk.lifecycle
+package com.pushexpress.sdk.notification_actions
 
 import android.content.Context
 import android.content.Intent

@@ -12,6 +12,7 @@ import com.pushexpress.sdk.local_settings.SdkSettingsRepositoryImpl
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.repository.ApiRepositoryImpl
 import com.pushexpress.sdk.main.SdkPushExpress
+import com.pushexpress.sdk.notification.NotificationDrawerImpl
 
 internal class SdkInitializer : Initializer<Unit> {
 
@@ -22,6 +23,7 @@ internal class SdkInitializer : Initializer<Unit> {
         SdkPushExpress.sdkApi = ApiRepositoryImpl(context, settings)
         SdkPushExpress.sdkSettings = settings
         SdkPushExpress.imageLoader = imageLoader
+        SdkPushExpress.notificationDrawer = NotificationDrawerImpl(context)
         SdkPushExpress.start()
         (context as? Application)?.registerActivityLifecycleCallbacks(
             UILifecycleObserver(

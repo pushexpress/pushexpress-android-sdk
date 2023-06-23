@@ -1,4 +1,4 @@
-package com.pushexpress.sdk.lifecycle
+package com.pushexpress.sdk.notification_actions
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -8,7 +8,7 @@ import android.os.IBinder
 import android.util.Log
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
-import com.pushexpress.sdk.fcm.FcmService.Companion.EXTRA_PX_MSG_ID
+import com.pushexpress.sdk.notification.NotificationDrawerImpl.Companion.EXTRA_PX_MSG_ID
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
 
