@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.models.EventsLifecycle
 import com.pushexpress.sdk.repository.ApiRepository
@@ -19,31 +21,31 @@ class UILifecycleObserver(
     Application.ActivityLifecycleCallbacks {
 
     private val handler = CoroutineExceptionHandler { _, exception ->
-        println("SdkPushExpress: CoroutineExceptionHandler got $exception")
+        println("$SDK_TAG: CoroutineExceptionHandler got $exception")
     }
 
     override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
-        // Log.d(TAG, "Activity created")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity created")
     }
 
     override fun onActivityStarted(activity: Activity) {
-        // Log.d(TAG, "Activity started")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity started")
     }
 
     override fun onActivityPaused(activity: Activity) {
-        // Log.d(TAG, "Activity paused")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity paused")
     }
 
     override fun onActivitySaveInstanceState(activity: Activity, bundle: Bundle) {
-        // Log.d(TAG, "Activity saved")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity saved")
     }
 
     override fun onActivityDestroyed(activity: Activity) {
-        // Log.d(TAG, "Activity destroyed")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity destroyed")
     }
 
     override fun onActivityResumed(activity: Activity) {
-        Log.d(TAG, "Activity resumed")
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity resumed")
 
         (activity as? AppCompatActivity)?.let {
             it.lifecycleScope.launch(handler) {
@@ -54,7 +56,7 @@ class UILifecycleObserver(
     }
 
     override fun onActivityStopped(activity: Activity) {
-        Log.d(TAG, "Activity stopped")
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity stopped")
 
         (activity as? AppCompatActivity)?.let {
             it.lifecycleScope.launch(handler) {
@@ -62,9 +64,5 @@ class UILifecycleObserver(
                 sdkApi.sendLifecycleEvent(EventsLifecycle.BACKGROUND)
             }
         }
-    }
-
-    companion object {
-        private const val TAG = "SdkPushExpress"
     }
 }

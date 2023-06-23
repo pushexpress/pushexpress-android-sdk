@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.main.SDK_TAG
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -13,7 +15,7 @@ import java.util.*
 class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepository {
 
     private val Context.dataStore: DataStore<Preferences> by
-                                preferencesDataStore(name = "sdkpushexpress")
+                                preferencesDataStore(name = STORAGE_NAME)
     private val instanceToken = stringPreferencesKey(INSTANCE_TOKEN)
     private val installTs = longPreferencesKey(INSTALL_TS)
     private val appId = stringPreferencesKey(APP_ID)
@@ -52,9 +54,9 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             ) {
                 zeroSettings(settings)
                 genNewInstall(settings, pushExpressAppId)
-                Log.d(TAG, "generate install with new appId: $pushExpressAppId")
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "generate install with new appId: $pushExpressAppId")
             } else {
-                Log.d(TAG, "got appId with existing install")
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "got appId with existing install")
             }
         }
     }
@@ -64,7 +66,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             settings[onscreenCnt] = (settings[onscreenCnt] ?: 0) + 1
             settings[resumedTs] = System.currentTimeMillis() / 1000
 
-            Log.d(TAG, "appResumed: ${settings[resumedTs]} " +
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "appResumed: ${settings[resumedTs]} " +
                     "${settings[onscreenCnt]} ${settings[onscreenSec] ?: 0}")
         }
     }
@@ -78,7 +80,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             settings[onscreenSec] = (settings[onscreenSec] ?:0) + fgSec
             settings[stoppedTs] = nowTs
 
-            Log.d(TAG, "appStopped: ${settings[stoppedTs]} ${settings[onscreenCnt]} ${settings[onscreenSec]}")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "appStopped: ${settings[stoppedTs]} ${settings[onscreenCnt]} ${settings[onscreenSec]}")
         }
     }
 
@@ -120,6 +122,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     }
 
     companion object {
+        private const val STORAGE_NAME = "sdkpushexpress"
         private const val INSTANCE_TOKEN = "ic_token"
         private const val INSTALL_TS = "install_ts"
         private const val APP_ID = "app_id"
@@ -128,6 +131,5 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         private const val ONSCREEN_SEC = "onscreen_sec"
         private const val RESUMED_TS = "resumed_ts"
         private const val STOPPED_TS = "stopped_ts"
-        private const val TAG = "SdkPushExpress"
     }
 }

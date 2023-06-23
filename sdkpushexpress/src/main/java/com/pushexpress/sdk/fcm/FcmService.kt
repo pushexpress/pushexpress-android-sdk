@@ -1,4 +1,4 @@
-package com.pushexpress.sdk.firebase
+package com.pushexpress.sdk.fcm
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,7 +15,8 @@ import androidx.core.graphics.drawable.toBitmap
 import coil.request.ImageRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.pushexpress.sdk.common.SDK_TAG
+import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
 import com.pushexpress.sdk.trampoline_activity.TrampolineActivity
@@ -25,19 +26,19 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
 
-open class FirebaseMessagingService : FirebaseMessagingService() {
+open class FcmService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         SdkPushExpress.sdkSettings.saveFirebaseToken(token)
-        Log.d(SDK_TAG, "onNewToken: token=${token}")
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onNewToken: token=${token}")
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        Log.d(SDK_TAG, "From: ${remoteMessage.from}")
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "From: ${remoteMessage.from}")
 
         // Check if message contains a data payload.
         if (remoteMessage.data.isNotEmpty()) {
-            Log.d(SDK_TAG, "Message data payload: ${remoteMessage.data}")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Message data payload: ${remoteMessage.data}")
         }
 
         sendNotification(remoteMessage.data)
@@ -129,8 +130,7 @@ open class FirebaseMessagingService : FirebaseMessagingService() {
             NotificationEvent.DELIVERY
         )
 
-        Log.d(
-            SDK_TAG,
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG,
             "Delivered: pxMsgId: " + data.getOrDefault(PX_MSG_ID_KEY) { "empty_id" } +
                     " notificationId: $notificationId")
 

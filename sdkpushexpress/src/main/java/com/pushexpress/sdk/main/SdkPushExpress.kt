@@ -5,9 +5,11 @@ import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.repository.ApiRepository
 import kotlinx.coroutines.*
 
+const val SDK_TAG = "sdkpushexpress"
+
 object SdkPushExpress {
     private val handler = CoroutineExceptionHandler { _, exception ->
-        println("SdkPushExpress: CoroutineExceptionHandler got $exception")
+        println("$SDK_TAG: CoroutineExceptionHandler got $exception")
     }
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob() + handler)
 

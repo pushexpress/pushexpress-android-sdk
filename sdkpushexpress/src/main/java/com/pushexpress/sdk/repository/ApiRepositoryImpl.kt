@@ -14,6 +14,8 @@ import java.util.*
 
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
+import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.models.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -30,23 +32,22 @@ internal class ApiRepositoryImpl(
     private var commonJob: Job = SupervisorJob()
 
     private val handler = CoroutineExceptionHandler { _, exception ->
-        println("SdkPushExpress: CoroutineExceptionHandler got $exception")
+        println("$SDK_TAG: CoroutineExceptionHandler got $exception")
     }
     private val scope = CoroutineScope(Dispatchers.IO + commonJob + handler)
 
     override suspend fun doApiLoop() =
         withContext(scope.coroutineContext) {
-            Log.d(TAG, "doApiLoop")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "doApiLoop")
 
             devicesJob.cancel()
             heartBeatsJob.cancel()
             try {
-                val res =
-                    retryHttpIO(times = 10) { sdkService.sendDeviceConfig(createDevicesRequest()) }
+                val res = retryHttpIO(times = 10) { createAndSendDeviceConfig() }
                 repeatRequestDevices(res.device_intvl)
                 repeatRequestHeartBeat(res.hbeat_intvl)
             } catch (e: Exception) {
-                Log.d(TAG, "doApiLoop: unhandled error: $e")
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "doApiLoop: unhandled error: $e")
                 // repeat loop now
                 repeatRequestDevices(1)
             }
@@ -55,42 +56,46 @@ internal class ApiRepositoryImpl(
     // send only once after appId or ExtId changes
     override suspend fun sendDeviceConfig() =
         withContext(scope.coroutineContext) {
-            Log.d(TAG, "sendDeviceConfig")
-            sdkService.sendDeviceConfig(createDevicesRequest())
+            createAndSendDeviceConfig()
         }
 
     override suspend fun sendLifecycleEvent(event: EventsLifecycle) {
         scope.launch {
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendLifecycleEvent[${event.event}]")
+
             val settings = settingsRepository.getSdkSettings()
-            Log.d(TAG, "sendLifecycleEvent ${event.event}")
-            sdkService.sendLifecycleEvent(
-                EventsLifecycleRequest(
-                    app_id = settings.appId,
-                    ic_token = settings.instanceToken,
-                    event = event.event
-                )
+            val evt = EventsLifecycleRequest(
+                app_id = settings.appId,
+                ic_token = settings.instanceToken,
+                event = event.event
             )
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG,
+                "sendLifecycleEvent[${event.event}]: ${evt}")
+            sdkService.sendLifecycleEvent(evt)
         }
     }
 
     override fun sendNotificationEvent(messageId: String, event: NotificationEvent) {
         scope.launch {
-            Log.d(TAG, "sendNotificationEvent")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG,
+                "sendNotificationEvent[$messageId, ${event.event}]")
+
             val sdkSettings = settingsRepository.getSdkSettings()
-            sdkService.sendNotificationEvent(
-                NotificationEventRequest(
-                    app_id = sdkSettings.appId,
-                    ic_token = sdkSettings.instanceToken,
-                    event = event.event,
-                    msg_id = messageId
-                )
+            val evt = NotificationEventRequest(
+                app_id = sdkSettings.appId,
+                ic_token = sdkSettings.instanceToken,
+                event = event.event,
+                msg_id = messageId
             )
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG,
+                "sendNotificationEvent[$messageId, ${event.event}]: ${evt}")
+            sdkService.sendNotificationEvent(evt)
         }
     }
 
     private fun repeatRequestDevices(timeSec: Long) {
         devicesJob = scope.launch {
-            Log.d(TAG, "repeatRequestDevices")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestDevices")
             timeSec.let {
                 delay(it * 1000)
                 ensureActive()
@@ -101,7 +106,7 @@ internal class ApiRepositoryImpl(
 
     private fun repeatRequestHeartBeat(timeSec: Long) {
         heartBeatsJob = scope.launch {
-            Log.d(TAG, "repeatRequestHeartBeat")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestHeartBeat")
             timeSec.let {
                 while (isActive) {
                     delay(it * 1000)
@@ -110,6 +115,13 @@ internal class ApiRepositoryImpl(
                 }
             }
         }
+    }
+
+    private suspend fun createAndSendDeviceConfig(): DeviceConfigResponse {
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendDeviceConfig")
+        val dc = createDevicesRequest()
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "sendDeviceConfig: $dc")
+        return sdkService.sendDeviceConfig(dc)
     }
 
     private suspend fun createDevicesRequest(): DeviceConfigRequest {
@@ -135,7 +147,6 @@ internal class ApiRepositoryImpl(
             onscreen_sec = sdkSettings.onscreenSec,
             droid_api_ver = Build.VERSION.SDK_INT,
         )
-        Log.d(TAG, "deviceConfig: $dc")
         return dc
     }
 
@@ -143,7 +154,7 @@ internal class ApiRepositoryImpl(
         return suspendCoroutine { continuation ->
             Firebase.messaging.token.addOnCompleteListener {
                 if (it.isSuccessful) {
-                    Log.d(TAG, "Fetched FCM registration: token=${it.result}")
+                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Fetched FCM registration: token=${it.result}")
                     settingsRepository.saveFirebaseToken(it.result)
                     continuation.resume(it.result)
                 } else {
@@ -165,6 +176,5 @@ internal class ApiRepositoryImpl(
 
     companion object {
         private const val SDK_PUSHEXPRESS_COMMON_URL = "https://sdk.push.express/r/v1/"
-        private const val TAG = "SdkPushExpress"
     }
 }

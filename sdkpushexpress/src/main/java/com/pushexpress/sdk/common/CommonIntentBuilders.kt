@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-
-const val SDK_TAG = "SdkPushExpress"
+import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.main.SDK_TAG
 
 fun startDefaultActivity(context: Context?) {
     context?.let { ctx ->
@@ -27,7 +27,7 @@ fun startOpenLinkIntent(context: Context?, link: String?) {
             viewIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             context?.startActivity(viewIntent)
         } catch (e: Exception) {
-            Log.d(SDK_TAG, "Can't open link: $e")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Can't open link: $e") else null
         }
     }
 }

@@ -1,3 +1,5 @@
+-keepclassmembers class com.pushexpress.sdk.models.* { *; }
+
 # BEGIN Retrofit hacks
 # Content below from https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro
 

@@ -1,6 +1,8 @@
 package com.pushexpress.sdk.utils
 
 import android.util.Log
+import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.main.SDK_TAG
 import kotlinx.coroutines.delay
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -17,14 +19,14 @@ suspend fun <T> retryHttpIO(
         try {
             return block()
         } catch (e: IOException) {
-            Log.d("retryHttpIO", "io-error: $e, delay for ${currentDelay}ms")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "io-error: $e, delay for ${currentDelay}ms")
         } catch (e: retrofit2.HttpException) {
-            Log.d("retryHttpIO", "http-error: $e, delay for ${currentDelay}ms")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "http-error: $e, delay for ${currentDelay}ms")
         }
         delay(currentDelay)
         currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
     } }
-    Log.d("retryHttpIO", "last run whatever happens ...")
+    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "last run whatever happens ...")
     return block()
 }
 
