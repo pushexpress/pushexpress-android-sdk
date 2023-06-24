@@ -1,4 +1,6 @@
-### Setup PushExpress
+## Setup Push.Express
+
+### Get Firebase Private key
 
 1. Go to [Firebase Console](https://console.firebase.google.com) and create a new project (or use existing one)
 
@@ -8,18 +10,18 @@
 
    <img src="/docs/images/fcm-project-settings.png" width=50%>
 
-3. Go to Service accounts and save to file `private-key.json` (you can use same for all apps)
+3. Go to Service accounts, press `Generate new private key` and save it to file `private-key.json` (**you can use same key for all apps**)
 
    <img src="/docs/images/fcm-private-key-page.png">
 
-4. Integrate your Push.Express App with key
+### Integrate your Push.Express App with Firebase
 
-  * Go to your Push.Express account
-  * Open existing App settings or create a new App
-  * Switch App Type to *PushExpress SDK*
+1. Go to your [Push.Express](https://push.express) account
+2. Open existing *App* settings or create a new App
+3. Switch *App Type* to *PushExpress SDK*
 
-     <img src="/docs/images/px-sdk-switch.png" width=30%>
+ <img src="/docs/images/px-sdk-switch.png" width=30%>
 
-  * Paste `private-key.json` file to *Firebase Admin SDK private key* textbox
+4. Paste `private-key.json` file to *Firebase Admin SDK private key* textbox
 
-     <img src="/docs/images/px-sdk-fcm-key.png">
+ <img src="/docs/images/px-sdk-fcm-key.png">

@@ -1,4 +1,4 @@
-### Setup Firebase
+## Setup Firebase
 
 1. Create Android App in your Firebase Console
 2. Download `google-services.json`

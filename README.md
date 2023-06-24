@@ -1,4 +1,6 @@
-## PushExpress Android SDK
+## Push.Express Android SDK
+
+Note: if you need fully unique apps, do [obfuscation guide](docs/ObfuscationGuide.md), else do all steps below.
 
 ### Step 1. Prerequisites
 
@@ -6,7 +8,7 @@ You will need to integrate your Push.Express account with Firebase.
 
 1. Follow [Push.Express integration guide](docs/PushExpressIntegration.md)
 
-2. Create or use existing app in AndroidStudio
+2. Create or use existing app in Android Studio
 
 3. Follow [Firebase Cloud Messaging integration guide](docs/FcmIntegration.md)
 
@@ -45,7 +47,7 @@ allprojects {
 ```
 </details>
 
-### Step 3. Add PushExpress SDK dependency
+### Step 3. Add Push.Express SDK dependency
 
 In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle`), add the pushexpress-android-sdk dependency:
 
@@ -82,7 +84,7 @@ class MainActivity : AppCompatActivity() {
 ```
 
 
-### Step 6. Ask for notification permissions
+### Step 5. Ask for notification permissions
 
 ```kotlin
 class MainActivity : AppCompatActivity() {
@@ -124,7 +126,7 @@ class MainActivity : AppCompatActivity() {
 }
 ```
 
-### Step 7. Build and try to send push
+### Step 6. Build and try to send push
 
-Use [PushExpress Documentation](https://push.express) to learn how to view app installs
+Use [Push.Express Documentation](https://push.express) to learn how to view app installs
 on your devices and send notifications.
