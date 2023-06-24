@@ -59,9 +59,12 @@ internal class ApiRepositoryImpl(
             createAndSendDeviceConfig()
         }
 
-    override suspend fun sendLifecycleEvent(event: EventsLifecycle) {
+    override fun sendLifecycleEvent(event: EventsLifecycle) {
         scope.launch {
             if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendLifecycleEvent[${event.event}]")
+
+            if (event == EventsLifecycle.ONSCREEN) settingsRepository.updateAppResumed()
+            else if (event == EventsLifecycle.BACKGROUND) settingsRepository.updateAppStopped()
 
             val settings = settingsRepository.getSdkSettings()
             val evt = EventsLifecycleRequest(

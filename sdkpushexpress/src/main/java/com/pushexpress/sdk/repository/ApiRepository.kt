@@ -9,7 +9,7 @@ interface ApiRepository {
 
     suspend fun sendDeviceConfig(): DeviceConfigResponse
 
-    suspend fun sendLifecycleEvent(event: EventsLifecycle)
+    fun sendLifecycleEvent(event: EventsLifecycle)
 
     fun saveFirebaseToken(token: String)
 

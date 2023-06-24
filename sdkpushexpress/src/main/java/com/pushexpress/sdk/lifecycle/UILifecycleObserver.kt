@@ -25,44 +25,32 @@ class UILifecycleObserver(
     }
 
     override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
-        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity created")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onActivityCreated")
     }
 
     override fun onActivityStarted(activity: Activity) {
-        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity started")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onActivityStarted")
     }
 
     override fun onActivityPaused(activity: Activity) {
-        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity paused")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onActivityPaused")
     }
 
     override fun onActivitySaveInstanceState(activity: Activity, bundle: Bundle) {
-        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity saved")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onActivitySaveInstanceState")
     }
 
     override fun onActivityDestroyed(activity: Activity) {
-        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity destroyed")
+        // if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onActivityDestroyed")
     }
 
     override fun onActivityResumed(activity: Activity) {
-        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity resumed")
-
-        (activity as? AppCompatActivity)?.let {
-            it.lifecycleScope.launch(handler) {
-                settingsRepository.updateAppResumed()
-                sdkApi.sendLifecycleEvent(EventsLifecycle.ONSCREEN)
-            }
-        }
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onActivityResumed")
+        sdkApi.sendLifecycleEvent(EventsLifecycle.ONSCREEN)
     }
 
     override fun onActivityStopped(activity: Activity) {
-        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Activity stopped")
-
-        (activity as? AppCompatActivity)?.let {
-            it.lifecycleScope.launch(handler) {
-                settingsRepository.updateAppStopped()
-                sdkApi.sendLifecycleEvent(EventsLifecycle.BACKGROUND)
-            }
-        }
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onActivityStopped")
+        sdkApi.sendLifecycleEvent(EventsLifecycle.BACKGROUND)
     }
 }
