@@ -27,7 +27,7 @@ sub rename_click_intent {
     my $new_iname = join "_", map { uc } map { $WORDS[int rand @WORDS] } (1 .. (1 + int(rand 2)));
 
     print "going to rename $INTENT_ACTION_CLICK to $new_cname.$new_iname\n";
-    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/\\b$INTENT_ACTION_CLICK\\b/$new_cname.$new_iname/g');
+    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/$INTENT_ACTION_CLICK/$new_cname.$new_iname/g');
     run_cmd($cmd);
 }
 
@@ -39,7 +39,7 @@ sub rename_const {
     $new_cval = substr($new_cval, 0, 22) if ($cname eq "SDK_TAG");
 
     print "going to rename $cname = $cval to $new_cval\n";
-    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/\\b$cname = "$cval"\\b/$cname = "$new_cval"/g');
+    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/$cname = "$cval"/$cname = "$new_cval"/g');
     run_cmd($cmd);
 }
 
@@ -60,7 +60,7 @@ sub rename_cls {
     print "going to rename class $cname to $new_cname in $path ...\n";
 
     # rename class occurrences
-    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/\\b$cname\\b/$new_cname/g');
+    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/$cname/$new_cname/g');
     run_cmd($cmd);
 
     # rename class file
@@ -82,11 +82,11 @@ sub rename_pkg {
     print "going to rename package $pkg to $new_pkg ...\n";
 
     # rename package occurrences
-    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/\\b$pkg\\b/$new_pkg/g');
+    my $cmd = qq(find $BASE_DIR -type f -print0 | xargs -0 perl -i -pe 's/$pkg/$new_pkg/g');
     run_cmd($cmd);
 
     # rename pkg path
-    rename $path, $new_path;
+    run_cmd("mv $path $new_path");
 }
 
 sub packages_from_classes {
@@ -103,11 +103,11 @@ sub packages_from_classes {
 sub run_cmd {
     my ($cmd) = @_;
     print "run: $cmd\n";
-    # my $ret = system($cmd);
-    # $ret >>= 8;
-    # die "FAILED with code $ret\n" if $ret > 0;
+    my $ret = system($cmd);
+    $ret >>= 8;
+    die "FAILED with code $ret\n" if $ret > 0;
 
-    # return $ret > 0 ? 0 : 1;
+    return $ret > 0 ? 0 : 1;
 }
 
 sub main {
