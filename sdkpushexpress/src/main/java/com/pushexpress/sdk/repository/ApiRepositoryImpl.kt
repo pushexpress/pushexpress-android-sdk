@@ -16,6 +16,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
+import com.pushexpress.sdk.main.SdkPushExpress.workflowActivated
 import com.pushexpress.sdk.models.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -38,7 +39,7 @@ internal class ApiRepositoryImpl(
 
     override suspend fun doApiLoop() =
         withContext(scope.coroutineContext) {
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "doApiLoop")
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop iteration started")
 
             devicesJob.cancel()
             heartBeatsJob.cancel()
@@ -53,11 +54,20 @@ internal class ApiRepositoryImpl(
             }
         }
 
+    override suspend fun stopApiLoop() =
+        withContext(scope.coroutineContext) {
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop stopped")
+
+            devicesJob.cancel()
+            heartBeatsJob.cancel()
+        }
+
     // send only once after appId or ExtId changes
-    override suspend fun sendDeviceConfig() =
+    /*override suspend fun sendDeviceConfig() =
         withContext(scope.coroutineContext) {
             createAndSendDeviceConfig()
         }
+    */
 
     override fun sendLifecycleEvent(event: EventsLifecycle) {
         scope.launch {
@@ -65,6 +75,8 @@ internal class ApiRepositoryImpl(
 
             if (event == EventsLifecycle.ONSCREEN) settingsRepository.updateAppResumed()
             else if (event == EventsLifecycle.BACKGROUND) settingsRepository.updateAppStopped()
+
+            if (!workflowActivated) return@launch
 
             val settings = settingsRepository.getSdkSettings()
             val evt = EventsLifecycleRequest(
@@ -88,6 +100,8 @@ internal class ApiRepositoryImpl(
         scope.launch {
             if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG,
                 "sendNotificationEvent[$messageId, ${event.event}]")
+
+            if (!workflowActivated) return@launch
 
             val sdkSettings = settingsRepository.getSdkSettings()
             val evt = NotificationEventRequest(

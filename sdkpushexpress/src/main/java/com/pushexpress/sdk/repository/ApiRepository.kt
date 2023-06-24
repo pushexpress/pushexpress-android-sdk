@@ -7,7 +7,9 @@ import com.pushexpress.sdk.models.NotificationEvent
 interface ApiRepository {
     suspend fun doApiLoop()
 
-    suspend fun sendDeviceConfig(): DeviceConfigResponse
+    suspend fun stopApiLoop()
+
+    // suspend fun sendDeviceConfig(): DeviceConfigResponse
 
     fun sendLifecycleEvent(event: EventsLifecycle)
 

@@ -13,33 +13,48 @@ object SdkPushExpress {
         println("$SDK_TAG: CoroutineExceptionHandler got $exception")
     }
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob() + handler)
-
     internal lateinit var sdkApi: ApiRepository
     internal lateinit var sdkSettings: SdkSettingsRepository
     internal lateinit var imageLoader: ImageLoader
     internal lateinit var notificationDrawer: NotificationDrawer
 
-    internal fun start() {
+    @Volatile
+    internal var workflowActivated: Boolean = false
+
+    @Deprecated("Deprecated. Use initialize(id); activate() instead.",
+        ReplaceWith("initialize(id); activate()"))
+    fun setAppId(appId: String) {
+        scope.launch {
+            sdkSettings.savePushExpressAppId(appId)
+        }
+        activate()
+    }
+
+    fun initialize(appId: String) {
+        scope.launch {
+            sdkSettings.savePushExpressAppId(appId)
+        }
+    }
+
+    fun setExternalId(externalId: String) {
+        scope.launch {
+            sdkSettings.savePushExpressExternalId(externalId)
+        }
+    }
+
+    fun activate() {
+        if (workflowActivated) return
+        workflowActivated = true
         scope.launch {
             sdkApi.doApiLoop()
         }
     }
 
-    fun setAppId(appId: String) {
-        runBlocking {
-            sdkSettings.savePushExpressAppId(appId)
-        }
+    fun deactivate() {
+        if (!workflowActivated) return
+        workflowActivated = false
         scope.launch {
-            sdkApi.sendDeviceConfig()
-        }
-    }
-
-    fun setExternalId(externalId: String) {
-        runBlocking {
-            sdkSettings.savePushExpressExternalId(externalId)
-        }
-        scope.launch {
-            sdkApi.sendDeviceConfig()
+            sdkApi.stopApiLoop()
         }
     }
 

@@ -24,7 +24,7 @@ internal class SdkInitializer : Initializer<Unit> {
         SdkPushExpress.sdkSettings = settings
         SdkPushExpress.imageLoader = imageLoader
         SdkPushExpress.notificationDrawer = NotificationDrawerImpl(context)
-        SdkPushExpress.start()
+
         (context as? Application)?.registerActivityLifecycleCallbacks(
             UILifecycleObserver(
                 SdkPushExpress.sdkApi
