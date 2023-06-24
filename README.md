@@ -1,14 +1,20 @@
 ## PushExpress Android SDK
 
-### Step 1. Requirements
+### Step 1. Prerequisites
 
-- Push.Express Account with registered App
+You will need to integrate your Push.Express account with Firebase.
 
-- Firebase Account with registered App
+1. Follow [Push.Express integration guide](docs/PushExpressIntegration.md)
+
+2. Create or use existing app in AndroidStudio
+
+3. Follow [Firebase Cloud Messaging integration guide](docs/FcmIntegration.md)
 
 ### Step 2. Add the JitPack repository to your build file
 
-If you use Gradle [Centralized Repository Declaration](https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:centralized-repository-declaration) feature (default for new projects in Android Studio Electric Eel), in your `settings.gradle`, add the Jitpack repo to repositories list:
+Ensure you have the latest Android Studio and Android Gradle Plugin!
+
+In your `settings.gradle`, add the Jitpack repo to repositories list (only if you use Gradle [Centralized Repository Declaration](https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:centralized-repository-declaration) feature, default for new projects since Android Studio Electric Eel):
 
 ```groovy
 // settings.gradle (Project Settings) in Android Studio
@@ -22,7 +28,10 @@ dependencyResolutionManagement {
 }
 ```
 
-Alternatively, if you use old `allprojects` style, in your **root-level (project-level)** Gradle file (`<project>/build.gradle`), add the Jitpack repo to repositories list:
+<details>
+<Summary>Alternatively, if you use old `allprojects` style</Summary>
+
+In your **root-level (project-level)** Gradle file (`<project>/build.gradle`), add the Jitpack repo to repositories list:
 
 ```groovy
 // build.gradle (Project: My_Application) in Android Studio
@@ -34,8 +43,9 @@ allprojects {
     }
 }
 ```
+</details>
 
-### Step 3. Add the dependency
+### Step 3. Add PushExpress SDK dependency
 
 In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle`), add the pushexpress-android-sdk dependency:
 
@@ -44,7 +54,7 @@ In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle
 ...
 dependencies {
     ...
-    implementation 'com.github.pushexpress:pushexpress-android-sdk:1.1.3'
+    implementation 'com.github.pushexpress:pushexpress-android-sdk:1.2.0'
 }
 ```
 
@@ -59,8 +69,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        SdkPushExpress.setAppId(PUSHEXPRESS_APP_ID)
+        SdkPushExpress.initialize(PUSHEXPRESS_APP_ID)
         SdkPushExpress.setExternalId("<some_external_id>") // optional
+        SdkPushExpress.activate() // Don't forget to activate SDK workflow!
 
         Log.d("Myapp", "PushExpress App Instance Token: " +
                 SdkPushExpress.getInstanceToken())
@@ -70,11 +81,6 @@ class MainActivity : AppCompatActivity() {
 }
 ```
 
-### Step 5. Setup Firebase
-
-- Follow Firebase Cloud Messaging [Android guide](https://firebase.google.com/docs/android/setup#console)
-
-- Follow PushExpress [SDK App configuration guide](https://push.express) to connect your PushExpress App with Firebase Cloud Messaging
 
 ### Step 6. Ask for notification permissions
 
@@ -119,5 +125,6 @@ class MainActivity : AppCompatActivity() {
 ```
 
 ### Step 7. Build and try to send push
+
 Use [PushExpress Documentation](https://push.express) to learn how to view app installs
 on your devices and send notifications.

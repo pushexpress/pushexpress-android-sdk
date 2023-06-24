@@ -6,7 +6,7 @@ import com.pushexpress.sdk.notification.NotificationDrawer
 import com.pushexpress.sdk.repository.ApiRepository
 import kotlinx.coroutines.*
 
-const val SDK_TAG = "sdkpushexpress"
+const val SDK_TAG = "SdkPushExpress"
 
 object SdkPushExpress {
     private val handler = CoroutineExceptionHandler { _, exception ->

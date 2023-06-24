@@ -10,15 +10,15 @@ chomp ( my @WORDS  = <DATA> );
 my @MANIFEST_CLS = (
     "com.pushexpress.sdk.app_startup.SdkInitializer",
     "com.pushexpress.sdk.fcm.FcmService",
-    "com.pushexpress.sdk.fcm.NotificationClickBroadcastReceiver",
-    "com.pushexpress.sdk.trampoline_activity.TrampolineActivity",
+    "com.pushexpress.sdk.notification_actions.NotificationClickBroadcastReceiver",
+    "com.pushexpress.sdk.notification_actions.TrampolineActivity",
 );
 
 my $INTENT_ACTION_CLICK = "com.pushexpress.sdk.ACTION_CLICK";
 
 my @STRING_CONSTS = (
     q(NOTIFICATION_CHANNEL_ID = "sdkpushexpress_notification_channel"),
-    q(SDK_TAG = "sdkpushexpress"),
+    q(SDK_TAG = "SdkPushExpress"),
     q(STORAGE_NAME = "sdkpushexpress"),
 );
 
