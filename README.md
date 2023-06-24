@@ -1,16 +1,16 @@
 ## Push.Express Android SDK
 
-Note: if you need fully unique apps, do [obfuscation guide](docs/ObfuscationGuide.md), else do all steps below.
+Note: if you need fully unique apps, do [obfuscation guide](/docs/ObfuscationGuide.md), else do all steps below.
 
 ### Step 1. Prerequisites
 
 You will need to integrate your Push.Express account with Firebase.
 
-1. Follow [Push.Express integration guide](docs/PushExpressIntegration.md)
+1. Follow [Push.Express integration guide](/docs/PushExpressIntegration.md)
 
 2. Create or use existing app in Android Studio
 
-3. Follow [Firebase Cloud Messaging integration guide](docs/FcmIntegration.md)
+3. Follow [Firebase Cloud Messaging integration guide](/docs/FcmIntegration.md)
 
 ### Step 2. Add the JitPack repository to your build file
 

@@ -6,11 +6,11 @@ You can obfuscate your app with standard `minifyEnabled true`, but if you want m
 
 You will need to integrate your Push.Express account with Firebase.
 
-1. Follow [Push.Express integration guide](docs/PushExpressIntegration.md)
+1. Follow [Push.Express integration guide](/docs/PushExpressIntegration.md)
 
 2. Create or use existing app in Android Studio
 
-3. Follow [Firebase Cloud Messaging integration guide](docs/FcmIntegration.md)
+3. Follow [Firebase Cloud Messaging integration guide](/docs/FcmIntegration.md)
 
 ### Step 2. Download full SDK repo
 
@@ -191,7 +191,9 @@ But you don't need (and it is really bad) to repeat this step if you just want t
     ```
     cd ./MyApplication/app/build/outputs/apk/release/
     jadx app-release.apk
+
     grep -ril 'pushexpress' app-release/
+    find app-release/ -iname '*pushexpress*'
 
     # you should see no files here
     ```
