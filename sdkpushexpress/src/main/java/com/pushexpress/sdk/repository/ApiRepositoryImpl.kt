@@ -47,7 +47,7 @@ internal class ApiRepositoryImpl(
                 repeatRequestDevices(res.device_intvl)
                 repeatRequestHeartBeat(res.hbeat_intvl)
             } catch (e: Exception) {
-                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "doApiLoop: unhandled error: $e")
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop: unhandled error: $e")
                 // repeat loop now
                 repeatRequestDevices(1)
             }
@@ -72,8 +72,7 @@ internal class ApiRepositoryImpl(
                 ic_token = settings.instanceToken,
                 event = event.event
             )
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG,
-                "sendLifecycleEvent[${event.event}]: ${evt}")
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send LifecycleEvent: ${evt}")
             sdkService.sendLifecycleEvent(evt)
         }
     }
@@ -97,8 +96,7 @@ internal class ApiRepositoryImpl(
                 event = event.event,
                 msg_id = messageId
             )
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG,
-                "sendNotificationEvent[$messageId, ${event.event}]: ${evt}")
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent: ${evt}")
             sdkService.sendNotificationEvent(evt)
         }
     }
@@ -130,7 +128,7 @@ internal class ApiRepositoryImpl(
     private suspend fun createAndSendDeviceConfig(): DeviceConfigResponse {
         if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendDeviceConfig")
         val dc = createDevicesRequest()
-        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "sendDeviceConfig: $dc")
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send DeviceConfig: $dc")
         return sdkService.sendDeviceConfig(dc)
     }
 

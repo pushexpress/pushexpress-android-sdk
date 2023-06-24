@@ -4,18 +4,13 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
-import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.models.EventsLifecycle
 import com.pushexpress.sdk.repository.ApiRepository
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.launch
 
 class UILifecycleObserver(
-    private val settingsRepository: SdkSettingsRepository,
     private val sdkApi: ApiRepository
 ) :
     Application.ActivityLifecycleCallbacks {

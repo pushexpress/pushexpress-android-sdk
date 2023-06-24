@@ -19,14 +19,14 @@ suspend fun <T> retryHttpIO(
         try {
             return block()
         } catch (e: IOException) {
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "io-error: $e, delay for ${currentDelay}ms")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Retry io-error: $e, delay for ${currentDelay}ms")
         } catch (e: retrofit2.HttpException) {
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "http-error: $e, delay for ${currentDelay}ms")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Retry http-error: $e, delay for ${currentDelay}ms")
         }
         delay(currentDelay)
         currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
     } }
-    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "last run whatever happens ...")
+    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Last run whatever happens ...")
     return block()
 }
 

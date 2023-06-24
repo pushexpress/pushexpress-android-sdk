@@ -27,7 +27,6 @@ internal class SdkInitializer : Initializer<Unit> {
         SdkPushExpress.start()
         (context as? Application)?.registerActivityLifecycleCallbacks(
             UILifecycleObserver(
-                SdkPushExpress.sdkSettings,
                 SdkPushExpress.sdkApi
             )
         )

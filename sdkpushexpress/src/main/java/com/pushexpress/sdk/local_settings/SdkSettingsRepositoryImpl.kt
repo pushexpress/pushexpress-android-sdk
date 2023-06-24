@@ -54,9 +54,11 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             ) {
                 zeroSettings(settings)
                 genNewInstall(settings, pushExpressAppId)
-                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "generate install with new appId: $pushExpressAppId")
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG,
+                    "Generate install with new appId: $pushExpressAppId")
             } else {
-                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "got appId with existing install")
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG,
+                    "Got appId with existing install: $pushExpressAppId")
             }
         }
     }
