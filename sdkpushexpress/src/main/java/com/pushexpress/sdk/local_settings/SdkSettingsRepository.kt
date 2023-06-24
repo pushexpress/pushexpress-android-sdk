@@ -10,7 +10,7 @@ interface SdkSettingsRepository {
 
     suspend fun savePushExpressExternalId(externalId: String)
 
-    fun saveFirebaseToken(firebaseToken: String)
+    suspend fun saveFirebaseToken(firebaseToken: String)
 
     suspend fun getSdkSettings(): SdkSettings
 }

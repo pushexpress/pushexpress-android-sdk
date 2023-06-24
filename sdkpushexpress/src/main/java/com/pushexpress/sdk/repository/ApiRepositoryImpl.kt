@@ -75,6 +75,13 @@ internal class ApiRepositoryImpl(
         }
     }
 
+    override fun saveFirebaseToken(token: String) {
+        scope.launch {
+            settingsRepository.saveFirebaseToken(token)
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "saveFirebaseToken: saved to settings")
+        }
+    }
+
     override fun sendNotificationEvent(messageId: String, event: NotificationEvent) {
         scope.launch {
             if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG,
@@ -154,8 +161,9 @@ internal class ApiRepositoryImpl(
         return suspendCoroutine { continuation ->
             Firebase.messaging.token.addOnCompleteListener {
                 if (it.isSuccessful) {
-                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Fetched FCM registration: token=${it.result}")
-                    settingsRepository.saveFirebaseToken(it.result)
+                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG,
+                        "getFirebaseToken: token=${it.result}")
+                    saveFirebaseToken(it.result)
                     continuation.resume(it.result)
                 } else {
                     continuation.resume("")

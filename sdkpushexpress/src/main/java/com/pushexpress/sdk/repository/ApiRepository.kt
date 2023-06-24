@@ -11,5 +11,7 @@ interface ApiRepository {
 
     suspend fun sendLifecycleEvent(event: EventsLifecycle)
 
+    fun saveFirebaseToken(token: String)
+
     fun sendNotificationEvent(messageId: String, event: NotificationEvent)
 }

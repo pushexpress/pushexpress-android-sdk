@@ -37,7 +37,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         }
     }
 
-    override fun saveFirebaseToken(firebaseToken: String) {
+    override suspend fun saveFirebaseToken(firebaseToken: String) {
         this.firebaseToken = firebaseToken
     }
 
