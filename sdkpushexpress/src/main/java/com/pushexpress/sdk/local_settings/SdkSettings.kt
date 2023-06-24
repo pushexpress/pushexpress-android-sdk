@@ -5,7 +5,7 @@ data class SdkSettings(
     val installTs: Long,
     val appId: String,
     val extId: String,
-    val firebaseToken: String?,
+    val firebaseToken: String,
     val onscreenCnt: Int,
     val onscreenSec: Long,
     val resumedTs: Long,

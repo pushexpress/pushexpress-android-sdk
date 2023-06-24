@@ -21,7 +21,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private val appId = stringPreferencesKey(APP_ID)
     private val extId = stringPreferencesKey(EXT_ID)
     @Volatile
-    private var firebaseToken: String? = null
+    private var firebaseToken: String = ""
     private val onscreenCnt = intPreferencesKey(ONSCREEN_CNT)
     private val onscreenSec = longPreferencesKey(ONSCREEN_SEC)
     private val resumedTs = longPreferencesKey(RESUMED_TS)
@@ -91,7 +91,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                 it[installTs] ?: 0,
                 it[appId].orEmpty(),
                 it[extId].orEmpty(),
-                firebaseToken, // not .orEmpty!!! ApiRepositoryImpl relies on null =(
+                firebaseToken,
                 it[onscreenCnt] ?: 0,
                 it[onscreenSec] ?: 0,
                 it[resumedTs] ?: 0,

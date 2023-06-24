@@ -148,7 +148,8 @@ internal class ApiRepositoryImpl(
             country_sim = getCountrySim().uppercase(),
             timezone = TimeZone.getDefault().rawOffset / 1000,
             install_ts = sdkSettings.installTs,
-            fcm_token = sdkSettings.firebaseToken ?: getFirebaseToken(),
+            fcm_token = sdkSettings.firebaseToken.let {
+                if (it.isEmpty()) getFirebaseToken() else sdkSettings.firebaseToken },
             ad_id = advId.orEmpty(),
             onscreen_cnt = sdkSettings.onscreenCnt,
             onscreen_sec = sdkSettings.onscreenSec,
