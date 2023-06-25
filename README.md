@@ -62,71 +62,9 @@ dependencies {
 
 ### Step 4. Add required code
 
-```kotlin
-import com.pushexpress.sdk.main.SdkPushExpress
+See [How to use Push.Express SDK in your Android Studio project](/docs/UseSDKInYourProject.md)
 
-const val PUSHEXPRESS_APP_ID = "####-######"
-
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        SdkPushExpress.initialize(PUSHEXPRESS_APP_ID)
-        SdkPushExpress.setExternalId("<some_external_id>") // optional
-        SdkPushExpress.activate() // Don't forget to activate SDK workflow!
-
-        Log.d("Myapp", "PushExpress App Instance Token: " +
-                SdkPushExpress.getInstanceToken())
-        Log.d("Myapp", "PushExpress App External ID: " +
-                SdkPushExpress.getExternalId())
-    }
-}
-```
-
-
-### Step 5. Ask for notification permissions
-
-```kotlin
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        ...
-        askNotificationPermission()
-    }
-
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT)
-                .show()
-        } else {
-            Toast.makeText(
-                this,
-                "FCM can't post notifications without POST_NOTIFICATIONS permission",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
-    private fun askNotificationPermission() {
-        // This is only necessary for API Level > 33 (TIRAMISU)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                // FCM SDK (and your app) can post notifications.
-            } else {
-                // Directly ask for the permission
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-}
-```
-
-### Step 6. Build and try to send push
+### Step 5. Build and try to send push
 
 Use [Push.Express Documentation](https://push.express) to learn how to view app installs
 on your devices and send notifications.

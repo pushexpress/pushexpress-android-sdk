@@ -46,71 +46,9 @@ You will need to integrate your Push.Express account with Firebase.
 
 ### Step 4. Add required code
 
-```kotlin
-import com.pushexpress.sdk.main.SdkPushExpress
+See [How to use Push.Express SDK in your Android Studio project](/docs/UseSDKInYourProject.md)
 
-const val PUSHEXPRESS_APP_ID = "####-######"
-
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        SdkPushExpress.initialize(PUSHEXPRESS_APP_ID)
-        SdkPushExpress.setExternalId("<some_external_id>") // optional
-        SdkPushExpress.activate() // Don't forget to activate SDK workflow!
-
-        Log.d("Myapp", "PushExpress App Instance Token: " +
-                SdkPushExpress.getInstanceToken())
-        Log.d("Myapp", "PushExpress App External ID: " +
-                SdkPushExpress.getExternalId())
-    }
-}
-```
-
-
-### Step 5. Ask for notification permissions
-
-```kotlin
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        ...
-        askNotificationPermission()
-    }
-
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT)
-                .show()
-        } else {
-            Toast.makeText(
-                this,
-                "FCM can't post notifications without POST_NOTIFICATIONS permission",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
-    private fun askNotificationPermission() {
-        // This is only necessary for API Level > 33 (TIRAMISU)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                // FCM SDK (and your app) can post notifications.
-            } else {
-                // Directly ask for the permission
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-}
-```
-
-### Step 6. Enable project obfuscation
+### Step 5. Enable project obfuscation
 
 1. Enable R8.fullMode in your `gradle.properties`
 
@@ -132,7 +70,7 @@ class MainActivity : AppCompatActivity() {
        ...
    ```
 
-### Step 7. Obfuscate SDK locally
+### Step 6. Obfuscate SDK locally
 
 **You need Linux (Ubuntu) or MacOS, it will not work on Windows out of the box!**
 
@@ -159,7 +97,7 @@ You need to do this step for each app, so **you need to have separate local SDK 
 
 But you don't need (and it is really bad) to repeat this step if you just want to update your app.
 
-### Step 8. Rename SDK package suffix
+### Step 7. Rename SDK package suffix
 
 1. Open Android Studio.
 2. Right-click on `sdkpushexpress->java->com.pushexpress.sdk`
@@ -170,7 +108,7 @@ But you don't need (and it is really bad) to repeat this step if you just want t
 <img src="/docs/images/rename-package-dialog.png" width=50%>
 
 
-### Step 9. Rename SDK package prefix
+### Step 8. Rename SDK package prefix
 
 1. Open Android Studio.
 2. Right-click on `sdkpushexpress->java->com.pushexpress.*`
@@ -179,10 +117,10 @@ But you don't need (and it is really bad) to repeat this step if you just want t
 4. Choose cool random name and press `Refactor` (see images below)
 
 <img src="/docs/images/rename-dir-menu.png">
-<img src="/docs/images/rename-dir-question.png" width=50%>
+<img src="/docs/images/rename-dir-question.png" width=40%>
 <img src="/docs/images/rename-dir-dialog.png" width=80%>
 
-### Step 10. Build and try to send push
+### Step 9. Build and try to send push
 
 1. Select `Release` build variants for your app and SDK (don't forget to sign you app)
 2. `Build->Clean Project`

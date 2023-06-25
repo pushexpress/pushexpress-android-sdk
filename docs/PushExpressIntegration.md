@@ -20,8 +20,9 @@
 2. Open existing *App* settings or create a new App
 3. Switch *App Type* to *PushExpress SDK*
 
- <img src="/docs/images/px-sdk-switch.png" width=30%>
+   <img src="/docs/images/px-sdk-switch.png" width=30%>
 
 4. Paste `private-key.json` file to *Firebase Admin SDK private key* textbox
 
- <img src="/docs/images/px-sdk-fcm-key.png">
+   <img src="/docs/images/px-sdk-fcm-key.png">
+
