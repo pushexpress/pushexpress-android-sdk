@@ -1,9 +1,26 @@
 ## Setup Firebase
 
-1. Create Android App in your Firebase Console
-2. Download `google-services.json`
+1. Go to [Firebase Console](https://console.firebase.google.com) and create a new project (or use existing one)
+
+   You can use one project for all your apps.
+
+2. Open Project Settings -> General
+
+   <img src="/docs/images/fcm-project-settings.png" width=50%>
+
+3. Create new Android app or just download `google-services.json` from existing app
+
+   <img src="/docs/images/fcm-apps-settings.png">
+
+   If you need to create new app, just:
+   - Register it
+   - Download `google-services.json`
+   - Press next-next-next =) 
+
+   <img src="/docs/images/fcm-new-android-app.png" width=70%>
+
 3. Put `google-services.json` to your app dir (like `<project>/app/google-services.json`)
-4. In your **root-level (project-level)** Gradle file (`<project>/build.gradle`), make sure you have the following lines:
+4. In top of your **root-level (project-level)** Gradle file (`<project>/build.gradle`), make sure you have the following lines:
    ```
    // build.gradle (Project: My_Application) in Android Studio
 

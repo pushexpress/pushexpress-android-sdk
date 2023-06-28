@@ -35,6 +35,13 @@ Push.Express SDK dependencies should be added to your project and you should hav
 3. Ask for notification permissions
 
    ```kotlin
+   ...
+   import android.content.pm.PackageManager
+   import android.os.Build
+   import android.widget.Toast
+   import androidx.activity.result.contract.ActivityResultContracts
+   import androidx.core.content.ContextCompat
+
    class MainActivity : AppCompatActivity() {
        override fun onCreate(savedInstanceState: Bundle?) {
            super.onCreate(savedInstanceState)
@@ -43,7 +50,7 @@ Push.Express SDK dependencies should be added to your project and you should hav
            askNotificationPermission()
        }
 
-       private val requestPermissionLauncher = registerForActivityResult(
+       private val notificationPermissionLauncher = registerForActivityResult(
            ActivityResultContracts.RequestPermission()
        ) { isGranted: Boolean ->
            if (isGranted) {
@@ -61,13 +68,15 @@ Push.Express SDK dependencies should be added to your project and you should hav
        private fun askNotificationPermission() {
            // This is only necessary for API Level > 33 (TIRAMISU)
            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-               if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+               if (ContextCompat.checkSelfPermission(this,
+                       android.Manifest.permission.POST_NOTIFICATIONS) ==
                    PackageManager.PERMISSION_GRANTED
                ) {
                    // FCM SDK (and your app) can post notifications.
                } else {
                    // Directly ask for the permission
-                   requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                   notificationPermissionLauncher.launch(
+                       android.Manifest.permission.POST_NOTIFICATIONS)
                }
            }
        }

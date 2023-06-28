@@ -23,7 +23,34 @@ You will need to integrate your Push.Express account with Firebase.
   \- pushexpress-android-sdk
 ```
 
-### Step 3. Add local SDK dependency
+### Step 3. Obfuscate SDK locally
+
+**You need Linux (Ubuntu) or MacOS, it will not work on Windows out of the box!**
+
+Open Terminal app and do next steps.
+
+1. Ensure you have installed `Perl`, coreutils `find` and `xargs` commands
+
+   ```
+   which perl && which find && which xargs && echo "OK"
+   ```
+
+2. In local SDK dir (`pushexpress-android-sdk`) run obfs.pl script
+
+   ```
+   cd pushexpress-android-sdk
+   ./scripts/obfs.pl
+   ```
+
+3. Get new SDK package name, use it in next steps instead of 'com.sdk.pushexpress'
+
+   <img src="/docs/images/obfs-pl.png">
+
+You need to do this step for each app, so **you need to have separate local SDK copy for each app!**
+
+But you don't need (and it is really bad) to repeat this step if you just want to update your app.
+
+### Step 4. Add local SDK dependency
 1. In your `settings.gradle` add path to local SDK
    ```
    // settings.gradle (Project Settings) in Android Studio
@@ -44,11 +71,11 @@ You will need to integrate your Push.Express account with Firebase.
 
 3. Run `File->Sync Project with Gradle files` in Android Studio
 
-### Step 4. Add required code
+### Step 5. Add required code
 
 See [How to use Push.Express SDK in your Android Studio project](/docs/UseSDKInYourProject.md)
 
-### Step 5. Enable project obfuscation
+### Step 6. Enable project obfuscation
 
 1. Enable R8.fullMode in your `gradle.properties`
 
@@ -70,57 +97,7 @@ See [How to use Push.Express SDK in your Android Studio project](/docs/UseSDKInY
        ...
    ```
 
-### Step 6. Obfuscate SDK locally
-
-**You need Linux (Ubuntu) or MacOS, it will not work on Windows out of the box!**
-
-Open Terminal app and do next steps.
-
-1. Ensure you have installed `Perl`, coreutils `find` and `xargs` commands
-
-   ```
-   which perl
-   which find
-   which xargs
-   ```
-
-2. In local SDK dir (`pushexpress-android-sdk`) run obfs.pl script
-
-   ```
-   cd pushexpress-android-sdk
-   ./scripts/obfs.pl
-   ```
-
-3. Run `File->Reload All from Disk` in Android Studio
-
-You need to do this step for each app, so **you need to have separate local SDK copy for each app!**
-
-But you don't need (and it is really bad) to repeat this step if you just want to update your app.
-
-### Step 7. Rename SDK package suffix
-
-1. Open Android Studio.
-2. Right-click on `sdkpushexpress->java->com.pushexpress.sdk`
-3. Select `Refactor->Rename`
-4. Choose some random name and press `Refactor` (see images below)
-
-<img src="/docs/images/rename-package-menu.png">
-<img src="/docs/images/rename-package-dialog.png" width=50%>
-
-
-### Step 8. Rename SDK package prefix
-
-1. Open Android Studio.
-2. Right-click on `sdkpushexpress->java->com.pushexpress.*`
-3. Select `Refactor->Move Package or Directory`
-4. Select `To Directory`
-4. Choose cool random name and press `Refactor` (see images below)
-
-<img src="/docs/images/rename-dir-menu.png">
-<img src="/docs/images/rename-dir-question.png" width=40%>
-<img src="/docs/images/rename-dir-dialog.png" width=80%>
-
-### Step 9. Build and try to send push
+### Step 7. Build and try to send push
 
 1. Select `Release` build variants for your app and SDK (don't forget to sign you app)
 2. `Build->Clean Project`
