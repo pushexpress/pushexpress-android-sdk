@@ -14,4 +14,5 @@ data class DeviceConfigRequest(
     val onscreen_cnt: Int,
     val onscreen_sec: Long,
     val droid_api_ver: Int,
+    val sdk_ver: String,
 )

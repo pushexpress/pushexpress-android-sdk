@@ -169,6 +169,7 @@ internal class ApiRepositoryImpl(
             onscreen_cnt = sdkSettings.onscreenCnt,
             onscreen_sec = sdkSettings.onscreenSec,
             droid_api_ver = Build.VERSION.SDK_INT,
+            sdk_ver = BuildConfig.VERSION_NAME,
         )
         return dc
     }
