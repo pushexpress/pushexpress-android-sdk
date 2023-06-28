@@ -2,10 +2,14 @@
 
 use strict;
 use warnings;
+use Env qw(DEBUG);
 
-my $BASE_DIR = "sdkpushexpress/src/main";
+my $MODULE_DIR = "sdkpushexpress";
+my $BASE_DIR = "$MODULE_DIR/src/main";
 
 chomp ( my @WORDS  = <DATA> );
+
+my $MAIN_PKG = "com.pushexpress.sdk";
 
 my @MANIFEST_CLS = (
     "com.pushexpress.sdk.app_startup.SdkInitializer",
@@ -103,11 +107,49 @@ sub packages_from_classes {
 sub run_cmd {
     my ($cmd) = @_;
     print "run: $cmd\n";
+    return 0 if $DEBUG;
+
     my $ret = system($cmd);
     $ret >>= 8;
     die "FAILED with code $ret\n" if $ret > 0;
 
     return $ret > 0 ? 0 : 1;
+}
+
+sub rename_main {
+    my ($pkg) = @_;
+
+    my @parts = split /\./, $pkg;
+    my $path = join "/", ($BASE_DIR, "java", @parts);
+    my $pname = $parts[$#parts];
+
+    my $new_pkg = join ".", map { $WORDS[int rand @WORDS] } (1 .. (2 + int(rand 3)));
+    my ($new_pname) = ($new_pkg =~ /\.([^.]+)$/);
+    my ($new_prefix) = ($new_pkg =~ /^(.*)\.[^.]+$/);
+
+    my $new_prefix_path = join "/", ($BASE_DIR, "java", (split /\./, $new_prefix));
+
+    print "going to rename package $pkg to $new_pkg ...\n";
+
+    # rename package occurrences
+    my $cmd = qq(find $MODULE_DIR -type f -print0 | xargs -0 perl -i -pe 's/$pkg/$new_pkg/g');
+    run_cmd($cmd);
+
+    # make new prefix dirs
+    run_cmd("mkdir -p $new_prefix_path");
+
+    # move old pname to new prfix
+    run_cmd("mv $path $new_prefix_path");
+
+    # move old pname to new pname
+    run_cmd("mv $new_prefix_path/$pname $new_prefix_path/$new_pname");
+
+    # remove old dirs
+    for (my $i = $#parts - 1; $i >= 0; $i--) {
+        run_cmd("rmdir $BASE_DIR/java/" . join "/", @parts[0 .. $i]);
+    }
+
+    return $new_pkg;
 }
 
 sub main {
@@ -121,6 +163,10 @@ sub main {
 
     rename_click_intent();
     rename_constants();
+    my $new_main = rename_main($MAIN_PKG);
+
+    print "\n***** SUCCESS *****\n\n";
+    print "Package to access SDK: '$new_main'\n\n";
 }
 
 main();
