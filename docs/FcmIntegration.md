@@ -21,34 +21,35 @@
 
 3. Put `google-services.json` to your app dir (like `<project>/app/google-services.json`)
 4. In top of your **root-level (project-level)** Gradle file (`<project>/build.gradle`), make sure you have the following lines:
-   ```
+   ```groovy
    // build.gradle (Project: My_Application) in Android Studio
 
-   buildscript {
-       repositories {
-           // Make sure that you have the following two repositories
-           google()  // Google's Maven repository
-           mavenCentral()  // Maven Central repository
-       }
-       dependencies {
-           // Add the dependency for the Google services Gradle plugin
-           classpath 'com.google.gms:google-services:4.3.15'
-       }
+   plugins {
+     id 'com.android.application' version '8.0.2' apply false
+     // ...
+
+     // Add the dependency for the Google services Gradle plugin
+     id 'com.google.gms.google-services' version '4.3.15' apply false
    }
    ```
 
 5. In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle`), add the Firebase Cloud Messaging dependency:
-   ```
+   ```groovy
    // build.gradle (Module :app) in Android Studio
 
    plugins {
-       ...
+       id 'com.android.application'
+       // ...
+
+       // Add the Google services Gradle plugin
        id 'com.google.gms.google-services'
    }
 
    dependencies {
-       ...
+       // Import the Firebase BoM
        implementation platform('com.google.firebase:firebase-bom:32.1.1')
+
+       // ...
    }
    ```
 

@@ -35,7 +35,7 @@ Push.Express SDK dependencies should be added to your project and you should hav
 3. Ask for notification permissions
 
    ```kotlin
-   ...
+   // ...
    import android.content.pm.PackageManager
    import android.os.Build
    import android.widget.Toast
@@ -46,7 +46,7 @@ Push.Express SDK dependencies should be added to your project and you should hav
        override fun onCreate(savedInstanceState: Bundle?) {
            super.onCreate(savedInstanceState)
 
-           ...
+           // ...
            askNotificationPermission()
        }
 
