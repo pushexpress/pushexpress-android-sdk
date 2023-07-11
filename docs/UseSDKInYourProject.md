@@ -24,9 +24,9 @@ Push.Express SDK dependencies should be added to your project and you should hav
            SdkPushExpress.setExternalId("<some_external_id>") // optional
            SdkPushExpress.activate() // Don't forget to activate SDK workflow!
 
-           Log.d("Myapp", "PushExpress App Instance Token: " +
+           Log.d("Myapp", "App Instance Token: " +
                    SdkPushExpress.getInstanceToken())
-           Log.d("Myapp", "PushExpress App External ID: " +
+           Log.d("Myapp", "App External ID: " +
                    SdkPushExpress.getExternalId())
        }
    }
