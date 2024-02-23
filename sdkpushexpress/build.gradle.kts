@@ -9,11 +9,11 @@ version = "1.2.0"
 
 android {
     namespace = "com.pushexpress.sdk"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 23
-        buildConfigField("String", "VERSION_NAME", "1.2.0")
+        buildConfigField("String", "VERSION_NAME", "\"1.2.0\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
