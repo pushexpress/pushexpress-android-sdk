@@ -6,6 +6,8 @@ interface SdkSettingsRepository {
 
     suspend fun updateAppStopped()
 
+    suspend fun setTag(tagKey: String, tagValue: String)
+
     suspend fun saveDeviceInstanceId(instanceId: String)
 
     suspend fun savePushExpressAppId(pushExpressAppId: String)

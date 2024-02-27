@@ -17,8 +17,8 @@ import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress.workflowActivated
 import com.pushexpress.sdk.models.*
-import com.pushexpress.sdk.retrofit.ApiServiceImpl
-import com.pushexpress.sdk.retrofit.HttpClient
+import com.pushexpress.sdk.network.ApiServiceImpl
+import com.pushexpress.sdk.network.HttpClient
 import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -106,15 +106,12 @@ internal class ApiRepositoryImpl(
 
             if (!workflowActivated) return@launch
 
-            val sdkSettings = settingsRepository.getSdkSettings()
             val evt = JSONObject().apply{
-                put("app_id", sdkSettings.appId)
-                put("ic_token", sdkSettings.instanceToken)
                 put("event", event.event)
                 put("msg_id", messageId)
             }
 
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent: ${evt}")
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent: $evt")
             sdkService.sendNotificationEvent(evt)
         }
     }
@@ -174,6 +171,14 @@ internal class ApiRepositoryImpl(
             put("ext_id", sdkSettings.extId)
             put("droid_api_ver",  Build.VERSION.SDK_INT)
             put("sdk_ver",  BuildConfig.VERSION_NAME)
+
+            put("tags", JSONObject(sdkSettings.tags.toMap()))
+
+            put("transport_type", "fcm")
+            put("transport_token", sdkSettings.firebaseToken)
+
+            put("platform_type", "android")
+            put("platform_name", "android_api_${Build.VERSION.SDK_INT}")
         }
         return deviceConfig
     }

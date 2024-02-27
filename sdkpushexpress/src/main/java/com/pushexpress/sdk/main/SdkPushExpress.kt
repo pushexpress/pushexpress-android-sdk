@@ -37,6 +37,12 @@ object SdkPushExpress {
         }
     }
 
+    fun setTag(tagKey: String, tagValue: String) {
+        scope.launch {
+            sdkSettings.setTag(tagKey, tagValue)
+        }
+    }
+
     fun setExternalId(externalId: String) {
         scope.launch {
             sdkSettings.savePushExpressExternalId(externalId)

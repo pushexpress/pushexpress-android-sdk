@@ -1,8 +1,6 @@
-package com.pushexpress.sdk.retrofit
+package com.pushexpress.sdk.network
 
 import com.pushexpress.sdk.models.DeviceConfigResponse
-import com.pushexpress.sdk.models.EventsLifecycleRequest
-import com.pushexpress.sdk.models.NotificationEventRequest
 import org.json.JSONObject
 
 internal interface ApiService {

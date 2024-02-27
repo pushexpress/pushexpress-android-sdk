@@ -1,11 +1,10 @@
-package com.pushexpress.sdk.retrofit
+package com.pushexpress.sdk.network
 
 import android.util.Log
+import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.models.DeviceConfigResponse
-import com.pushexpress.sdk.models.EventsLifecycleRequest
-import com.pushexpress.sdk.models.NotificationEventRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -18,6 +17,12 @@ class ApiServiceImpl(
     private val client: OkHttpClient,
     private val settings: SdkSettingsRepository
 ): ApiService {
+
+    object HttpMethod {
+        const val POST = "POST"
+        const val PUT = "PUT"
+    }
+
     private val baseUrl = SDK_PUSHEXPRESS_COMMON_URL
 
     private suspend fun makeRequest(
@@ -35,19 +40,17 @@ class ApiServiceImpl(
                 .url("$commonUrl/$urlSuffix")
                 .method(method, requestBody)
                 .build()
-
-            Log.d(SDK_TAG, "$method ${request.url} request: $data")
-
             val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
             responseBody = response.body?.string().toString()
-            Log.d(SDK_TAG, "$method ${request.url} response: $responseBody")
-            Log.d(SDK_TAG, "${::makeRequest.name}${response.code}")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "REQUEST: $method\nTO: ${request.url}\nSTATUS: ${response.code}\nDATA: $responseBody")
+//            Log.d(SDK_TAG, "$method ${request.url} response: $responseBody")
         } catch (e: Exception) {
             Log.d(SDK_TAG, "$method exception: $e")
         }
         return responseBody
     }
 
+    // r.POST("/apps/:uappId/instances", icInitOrActivateHandler)
     override suspend fun getInstanceId() {
         val instanceToken = settings.getSdkSettings().instanceToken
         val extId = settings.getSdkSettings().extId
@@ -55,7 +58,7 @@ class ApiServiceImpl(
             put("ic_token", instanceToken)
             put("ext_id", extId)
         }
-        val responseBody = makeRequest("POST", "instances", data)
+        val responseBody = makeRequest(HttpMethod.POST, "instances", data)
         try {
             val id = responseBody.let { JSONObject(it).getString("id") }
             Log.d(SDK_TAG, "getInstanceId $responseBody")
@@ -65,22 +68,25 @@ class ApiServiceImpl(
         }
     }
 
+    // r.PUT("/apps/:uappId/instances/:icId/info", icUpdateHandler)
     override suspend fun sendDeviceConfig(config: JSONObject): DeviceConfigResponse {
         val instanceId = settings.getSdkSettings().instanceId
-        Log.d(SDK_TAG, "INSTANCE ID $instanceId")
-        makeRequest("PUT", "instances/$instanceId/info", config)
-        Log.d(SDK_TAG, config.toString())
-        return DeviceConfigResponse(123123, 41251254)
+        val response = makeRequest(HttpMethod.PUT, "instances/$instanceId/info", config)
+        val deviceInterval = response.let { JSONObject(it).getLong("device_intvl") }
+        val hbeatInterval = response.let { JSONObject(it).getLong("hbeat_intvl") }
+        return DeviceConfigResponse(deviceInterval, hbeatInterval)
     }
 
+    // r.POST("/apps/:uappId/instances/:icId/events/lifecycle", icLifecycleEventHandler)
     override suspend fun sendLifecycleEvent(event: JSONObject) {
         val instanceId = settings.getSdkSettings().instanceId
-        Log.d(SDK_TAG, "Sending event")
-        makeRequest("POST", "instances/$instanceId/events/lifecycle", event)
+        makeRequest(HttpMethod.POST, "instances/$instanceId/events/lifecycle", event)
     }
 
+    // r.POST("/apps/:uappId/instances/:icId/events/notification", icNotificationEventHandler)
     override suspend fun sendNotificationEvent(event: JSONObject) {
-    TODO()
+        val instanceId = settings.getSdkSettings().instanceId
+        makeRequest(HttpMethod.POST, "instances/$instanceId/notification", event)
     }
 
     companion object {

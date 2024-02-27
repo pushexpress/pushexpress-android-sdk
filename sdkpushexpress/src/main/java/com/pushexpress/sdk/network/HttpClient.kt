@@ -1,4 +1,4 @@
-package com.pushexpress.sdk.retrofit
+package com.pushexpress.sdk.network
 
 import okhttp3.OkHttpClient
 import java.security.KeyStore

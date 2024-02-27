@@ -23,6 +23,9 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private val extId = stringPreferencesKey(EXT_ID)
     @Volatile
     private var firebaseToken: String = ""
+    private var transportType: String = ""
+    // do i need to put this into the local storage?
+    private val tags: MutableMap<String, String> = mutableMapOf<String, String>()
     private val onscreenCnt = intPreferencesKey(ONSCREEN_CNT)
     private val onscreenSec = longPreferencesKey(ONSCREEN_SEC)
     private val resumedTs = longPreferencesKey(RESUMED_TS)
@@ -42,6 +45,10 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         context.dataStore.edit { settings ->
             settings[this.instanceId] = instanceId
         }
+    }
+
+    override suspend fun setTag(tagKey: String, tagValue: String) {
+        this.tags[tagKey] = tagValue
     }
 
     override suspend fun saveFirebaseToken(firebaseToken: String) {
@@ -106,6 +113,8 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                 it[onscreenSec] ?: 0,
                 it[resumedTs] ?: 0,
                 it[stoppedTs] ?: 0,
+                transportType,
+                tags
             )
         }.first()
     }
@@ -113,6 +122,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private fun zeroSettings(settings: MutablePreferences) {
         settings.apply {
             this[instanceToken] = ""
+            this[instanceId] = ""
             this[installTs] = 0
             this[appId] = ""
             this[extId] = ""
@@ -120,6 +130,8 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             this[onscreenSec] = 0
             this[resumedTs] = 0
             this[stoppedTs] = 0
+            transportType = ""
+            firebaseToken = ""
         }
     }
 

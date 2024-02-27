@@ -10,5 +10,7 @@ data class SdkSettings(
     val onscreenCnt: Int,
     val onscreenSec: Long,
     val resumedTs: Long,
-    val stoppedTs: Long
+    val stoppedTs: Long,
+    val transportType: String,
+    val tags: MutableMap<String, String>
 )
