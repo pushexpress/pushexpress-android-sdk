@@ -33,6 +33,7 @@ object SdkPushExpress {
     fun initialize(appId: String) {
         scope.launch {
             sdkSettings.savePushExpressAppId(appId)
+            sdkApi.getInstanceId()
         }
     }
 

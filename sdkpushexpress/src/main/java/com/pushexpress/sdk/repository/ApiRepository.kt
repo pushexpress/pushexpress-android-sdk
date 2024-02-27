@@ -10,6 +10,7 @@ interface ApiRepository {
     suspend fun stopApiLoop()
 
     // suspend fun sendDeviceConfig(): DeviceConfigResponse
+    suspend fun getInstanceId()
 
     fun sendLifecycleEvent(event: EventsLifecycle)
 
