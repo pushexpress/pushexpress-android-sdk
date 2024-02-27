@@ -17,6 +17,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private val Context.dataStore: DataStore<Preferences> by
                                 preferencesDataStore(name = STORAGE_NAME)
     private val instanceToken = stringPreferencesKey(INSTANCE_TOKEN)
+    private val instanceId = stringPreferencesKey(INSTANCE_ID)
     private val installTs = longPreferencesKey(INSTALL_TS)
     private val appId = stringPreferencesKey(APP_ID)
     private val extId = stringPreferencesKey(EXT_ID)
@@ -34,6 +35,12 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                     zeroSettings(settings)
                 }
             }
+        }
+    }
+
+    override suspend fun saveDeviceInstanceId(instanceId: String) {
+        context.dataStore.edit { settings ->
+            settings[this.instanceId] = instanceId
         }
     }
 
@@ -90,6 +97,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         return context.dataStore.data.map {
             SdkSettings(
                 it[instanceToken].orEmpty(),
+                it[instanceId].orEmpty(),
                 it[installTs] ?: 0,
                 it[appId].orEmpty(),
                 it[extId].orEmpty(),
@@ -126,6 +134,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     companion object {
         private const val STORAGE_NAME = "sdkpushexpress"
         private const val INSTANCE_TOKEN = "ic_token"
+        private const val INSTANCE_ID = "ic_id"
         private const val INSTALL_TS = "install_ts"
         private const val APP_ID = "app_id"
         private const val EXT_ID = "ext_id"
