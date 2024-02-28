@@ -174,7 +174,7 @@ internal class ApiRepositoryImpl(
 
             put("tags", JSONObject(sdkSettings.tags.toMap()))
 
-            put("transport_type", "fcm")
+            put("transport_type", "fcm.data")
             put("transport_token", sdkSettings.firebaseToken)
 
             put("platform_type", "android")

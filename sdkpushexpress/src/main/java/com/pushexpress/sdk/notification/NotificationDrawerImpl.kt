@@ -28,7 +28,7 @@ import kotlin.random.Random
 
 internal class NotificationDrawerImpl (
     private val context: Context
-) : com.pushexpress.sdk.notification.NotificationDrawer {
+) : NotificationDrawer {
     override fun showNotification(data: Map<String, String>) {
         // It's ok for now to post new notification each time
         // (or we need to maintain global px.msg_id -> local notificationId map)
