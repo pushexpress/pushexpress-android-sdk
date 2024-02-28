@@ -2,9 +2,12 @@ package com.pushexpress.sdk.network
 
 import okhttp3.OkHttpClient
 import java.security.KeyStore
-import java.util.*
+import java.util.Arrays
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.*
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 object HttpClient {
 

@@ -4,7 +4,12 @@ import coil.ImageLoader
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.notification.NotificationDrawer
 import com.pushexpress.sdk.repository.ApiRepository
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 const val SDK_TAG = "SdkPushExpress"
 

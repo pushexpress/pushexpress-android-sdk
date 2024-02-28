@@ -3,14 +3,19 @@ package com.pushexpress.sdk.local_settings
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import java.util.*
+import java.util.UUID
 
 class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepository {
 
@@ -25,7 +30,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private var firebaseToken: String = ""
     private var transportType: String = ""
     // do i need to put this into the local storage?
-    private val tags: MutableMap<String, String> = mutableMapOf<String, String>()
+    private val tags: MutableMap<String, String> = mutableMapOf()
     private val onscreenCnt = intPreferencesKey(ONSCREEN_CNT)
     private val onscreenSec = longPreferencesKey(ONSCREEN_SEC)
     private val resumedTs = longPreferencesKey(RESUMED_TS)

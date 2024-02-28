@@ -13,12 +13,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.request.ImageRequest
 import com.pushexpress.sdk.BuildConfig
-import com.pushexpress.sdk.notification_actions.NotificationClickBroadcastReceiver
-
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
-
+import com.pushexpress.sdk.notification_actions.NotificationClickBroadcastReceiver
 import com.pushexpress.sdk.notification_actions.TrampolineActivity
 import com.pushexpress.sdk.utils.getBy
 import kotlinx.coroutines.launch

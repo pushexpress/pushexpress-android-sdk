@@ -5,21 +5,30 @@ import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import com.google.android.gms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo
-
-import com.pushexpress.sdk.local_settings.SdkSettingsRepository
-import com.pushexpress.sdk.utils.retryHttpIO
-import kotlinx.coroutines.*
-import java.util.*
-
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
 import com.pushexpress.sdk.BuildConfig
+import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress.workflowActivated
-import com.pushexpress.sdk.models.*
+import com.pushexpress.sdk.models.DeviceConfigResponse
+import com.pushexpress.sdk.models.EventsLifecycle
+import com.pushexpress.sdk.models.NotificationEvent
 import com.pushexpress.sdk.network.ApiServiceImpl
 import com.pushexpress.sdk.network.HttpClient
+import com.pushexpress.sdk.utils.retryHttpIO
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -47,14 +56,17 @@ internal class ApiRepositoryImpl(
             heartBeatsJob.cancel()
             try {
                 val res = retryHttpIO(times = 10) { createAndSendDeviceConfig() }
-                repeatRequestDevices(res.device_intvl)
-                repeatRequestHeartBeat(res.hbeat_intvl)
+                repeatRequestDevices(res.update_interval_sec)
             } catch (e: Exception) {
                 if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop: unhandled error: $e")
                 // repeat loop now
                 repeatRequestDevices(1)
             }
         }
+
+    override suspend fun deactivateDevice() {
+        sdkService.deactivateDevice()
+    }
 
     override suspend fun stopApiLoop() =
         withContext(scope.coroutineContext) {
@@ -83,7 +95,7 @@ internal class ApiRepositoryImpl(
             val evt = JSONObject().apply {
                 put("event", event.event)
             }
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send LifecycleEvent: ${evt}")
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send LifecycleEvent: $evt")
             sdkService.sendLifecycleEvent(evt)
         }
     }
@@ -127,18 +139,18 @@ internal class ApiRepositoryImpl(
         }
     }
 
-    private fun repeatRequestHeartBeat(timeSec: Long) {
-        heartBeatsJob = scope.launch {
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestHeartBeat")
-            timeSec.let {
-                while (isActive) {
-                    delay(it * 1000)
-                    ensureActive()
-                    sendLifecycleEvent(EventsLifecycle.HBEAT)
-                }
-            }
-        }
-    }
+//    private fun repeatRequestHeartBeat(timeSec: Long) {
+//        heartBeatsJob = scope.launch {
+//            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestHeartBeat")
+//            timeSec.let {
+//                while (isActive) {
+//                    delay(it * 1000)
+//                    ensureActive()
+//                    sendLifecycleEvent(EventsLifecycle.HBEAT)
+//                }
+//            }
+//        }
+//    }
 
     private suspend fun createAndSendDeviceConfig(): DeviceConfigResponse {
         if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendDeviceConfig")

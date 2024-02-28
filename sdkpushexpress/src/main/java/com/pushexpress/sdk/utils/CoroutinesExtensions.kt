@@ -4,6 +4,8 @@ import android.util.Log
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
 import kotlinx.coroutines.delay
+import okhttp3.OkHttp
+import okhttp3.OkHttpClient
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -20,7 +22,7 @@ suspend fun <T> retryHttpIO(
             return block()
         } catch (e: IOException) {
             if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Retry io-error: $e, delay for ${currentDelay}ms")
-        } catch (e: retrofit2.HttpException) {
+        } catch (e: IOException) {
             if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Retry http-error: $e, delay for ${currentDelay}ms")
         }
         delay(currentDelay)

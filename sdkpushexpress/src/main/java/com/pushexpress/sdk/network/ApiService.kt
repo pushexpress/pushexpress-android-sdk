@@ -7,6 +7,8 @@ internal interface ApiService {
 
     suspend fun getInstanceId()
 
+    suspend fun deactivateDevice()
+
     suspend fun sendDeviceConfig(config: JSONObject): DeviceConfigResponse
 
     suspend fun sendLifecycleEvent(event: JSONObject)

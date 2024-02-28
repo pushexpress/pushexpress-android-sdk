@@ -72,9 +72,8 @@ class ApiServiceImpl(
     override suspend fun sendDeviceConfig(config: JSONObject): DeviceConfigResponse {
         val instanceId = settings.getSdkSettings().instanceId
         val response = makeRequest(HttpMethod.PUT, "instances/$instanceId/info", config)
-        val deviceInterval = response.let { JSONObject(it).getLong("device_intvl") }
-        val hbeatInterval = response.let { JSONObject(it).getLong("hbeat_intvl") }
-        return DeviceConfigResponse(deviceInterval, hbeatInterval)
+        val updateInterval = response.let { JSONObject(it).getLong("update_interval_sec") }
+        return DeviceConfigResponse(updateInterval)
     }
 
     // r.POST("/apps/:uappId/instances/:icId/events/lifecycle", icLifecycleEventHandler)
@@ -87,6 +86,29 @@ class ApiServiceImpl(
     override suspend fun sendNotificationEvent(event: JSONObject) {
         val instanceId = settings.getSdkSettings().instanceId
         makeRequest(HttpMethod.POST, "instances/$instanceId/notification", event)
+    }
+
+    // r.POST("/apps/:uappId/instances/:icId/deactivate", icDeactivateHandler)
+    override suspend fun deactivateDevice() {
+        val instanceId = settings.getSdkSettings().instanceId
+        val instanceToken = settings.getSdkSettings().instanceToken
+        val extId = settings.getSdkSettings().extId
+        val data = JSONObject().apply{
+            put("ic_token", instanceToken)
+            put("ext_id", extId)
+        }
+        val responseBody = makeRequest(
+            HttpMethod.POST,
+            "instances/$instanceId/deactivate",
+            data
+        )
+        try {
+            val id = responseBody.let { JSONObject(it).getString("id") }
+            Log.d(SDK_TAG, "deactivate $responseBody")
+            settings.saveDeviceInstanceId(id)
+        } catch (e: Exception) {
+            Log.d(SDK_TAG, "deactivate exception: $e")
+        }
     }
 
     companion object {

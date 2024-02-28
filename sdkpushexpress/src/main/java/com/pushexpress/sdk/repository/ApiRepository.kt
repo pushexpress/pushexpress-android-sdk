@@ -1,16 +1,17 @@
 package com.pushexpress.sdk.repository
 
-import com.pushexpress.sdk.models.DeviceConfigResponse
 import com.pushexpress.sdk.models.EventsLifecycle
 import com.pushexpress.sdk.models.NotificationEvent
 
 interface ApiRepository {
+
     suspend fun doApiLoop()
 
     suspend fun stopApiLoop()
 
-    // suspend fun sendDeviceConfig(): DeviceConfigResponse
     suspend fun getInstanceId()
+
+    suspend fun deactivateDevice()
 
     fun sendLifecycleEvent(event: EventsLifecycle)
 
