@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 const val SDK_TAG = "SdkPushExpress"
 
@@ -38,7 +39,7 @@ object SdkPushExpress {
     fun initialize(appId: String) {
         scope.launch {
             sdkSettings.savePushExpressAppId(appId)
-            sdkApi.getInstanceId()
+            getInstanceId()
         }
     }
 
@@ -69,6 +70,8 @@ object SdkPushExpress {
             sdkApi.stopApiLoop()
         }
     }
+
+    fun getInstanceId() = runBlocking { sdkApi.getInstanceId() }
 
     fun getInstanceToken() = runBlocking { sdkSettings.getSdkSettings().instanceToken }
 

@@ -42,7 +42,7 @@ class ApiServiceImpl(
                 .build()
             val response = withContext(Dispatchers.IO) { client.newCall(request).execute() }
             responseBody = response.body?.string().toString()
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "REQUEST: $method\nTO: ${request.url}\nSTATUS: ${response.code}\nDATA: $responseBody")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "REQUEST: $method\nTO: ${request.url}\nSTATUS: ${response.code}\nRESPONSE: $responseBody")
 //            Log.d(SDK_TAG, "$method ${request.url} response: $responseBody")
         } catch (e: Exception) {
             Log.d(SDK_TAG, "$method exception: $e")
@@ -70,7 +70,9 @@ class ApiServiceImpl(
 
     // r.PUT("/apps/:uappId/instances/:icId/info", icUpdateHandler)
     override suspend fun sendDeviceConfig(config: JSONObject): DeviceConfigResponse {
-        val instanceId = settings.getSdkSettings().instanceId
+        val instanceId = settings.getSdkSettings().instanceId.let {
+            if (it.isEmpty()) getInstanceId() else settings.getSdkSettings().instanceId
+        }
         val response = makeRequest(HttpMethod.PUT, "instances/$instanceId/info", config)
         val updateInterval = response.let { JSONObject(it).getLong("update_interval_sec") }
         return DeviceConfigResponse(updateInterval)
@@ -78,13 +80,17 @@ class ApiServiceImpl(
 
     // r.POST("/apps/:uappId/instances/:icId/events/lifecycle", icLifecycleEventHandler)
     override suspend fun sendLifecycleEvent(event: JSONObject) {
-        val instanceId = settings.getSdkSettings().instanceId
+        val instanceId = settings.getSdkSettings().instanceId.let {
+            if (it.isEmpty()) getInstanceId() else settings.getSdkSettings().instanceId
+        }
         makeRequest(HttpMethod.POST, "instances/$instanceId/events/lifecycle", event)
     }
 
     // r.POST("/apps/:uappId/instances/:icId/events/notification", icNotificationEventHandler)
     override suspend fun sendNotificationEvent(event: JSONObject) {
-        val instanceId = settings.getSdkSettings().instanceId
+        val instanceId = settings.getSdkSettings().instanceId.let {
+            if (it.isEmpty()) getInstanceId() else settings.getSdkSettings().instanceId
+        }
         makeRequest(HttpMethod.POST, "instances/$instanceId/notification", event)
     }
 
