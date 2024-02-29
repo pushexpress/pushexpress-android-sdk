@@ -3,25 +3,34 @@ package com.pushexpress.sdk.local_settings
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import java.util.*
+import java.util.UUID
 
 class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepository {
 
     private val Context.dataStore: DataStore<Preferences> by
                                 preferencesDataStore(name = STORAGE_NAME)
     private val instanceToken = stringPreferencesKey(INSTANCE_TOKEN)
+    private val instanceId = stringPreferencesKey(INSTANCE_ID)
     private val installTs = longPreferencesKey(INSTALL_TS)
     private val appId = stringPreferencesKey(APP_ID)
     private val extId = stringPreferencesKey(EXT_ID)
     @Volatile
     private var firebaseToken: String = ""
+    private var transportType: String = ""
+    // do i need to put this into the local storage?
+    private val tags: MutableMap<String, String> = mutableMapOf()
     private val onscreenCnt = intPreferencesKey(ONSCREEN_CNT)
     private val onscreenSec = longPreferencesKey(ONSCREEN_SEC)
     private val resumedTs = longPreferencesKey(RESUMED_TS)
@@ -35,6 +44,16 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                 }
             }
         }
+    }
+
+    override suspend fun saveDeviceInstanceId(instanceId: String) {
+        context.dataStore.edit { settings ->
+            settings[this.instanceId] = instanceId
+        }
+    }
+
+    override suspend fun setTag(tagKey: String, tagValue: String) {
+        this.tags[tagKey] = tagValue
     }
 
     override suspend fun saveFirebaseToken(firebaseToken: String) {
@@ -54,6 +73,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             ) {
                 zeroSettings(settings)
                 genNewInstall(settings, pushExpressAppId)
+
                 if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG,
                     "Generate install with new appId: $pushExpressAppId")
             } else {
@@ -90,6 +110,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         return context.dataStore.data.map {
             SdkSettings(
                 it[instanceToken].orEmpty(),
+                it[instanceId].orEmpty(),
                 it[installTs] ?: 0,
                 it[appId].orEmpty(),
                 it[extId].orEmpty(),
@@ -98,6 +119,8 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                 it[onscreenSec] ?: 0,
                 it[resumedTs] ?: 0,
                 it[stoppedTs] ?: 0,
+                transportType,
+                tags
             )
         }.first()
     }
@@ -105,6 +128,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private fun zeroSettings(settings: MutablePreferences) {
         settings.apply {
             this[instanceToken] = ""
+            this[instanceId] = ""
             this[installTs] = 0
             this[appId] = ""
             this[extId] = ""
@@ -112,6 +136,8 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             this[onscreenSec] = 0
             this[resumedTs] = 0
             this[stoppedTs] = 0
+            transportType = ""
+            firebaseToken = ""
         }
     }
 
@@ -126,6 +152,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     companion object {
         private const val STORAGE_NAME = "sdkpushexpress"
         private const val INSTANCE_TOKEN = "ic_token"
+        private const val INSTANCE_ID = "ic_id"
         private const val INSTALL_TS = "install_ts"
         private const val APP_ID = "app_id"
         private const val EXT_ID = "ext_id"

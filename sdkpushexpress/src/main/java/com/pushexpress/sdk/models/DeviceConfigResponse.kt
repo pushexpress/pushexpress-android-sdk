@@ -1,3 +1,3 @@
 package com.pushexpress.sdk.models
 
-data class DeviceConfigResponse(val device_intvl: Long, val hbeat_intvl: Long)
+data class DeviceConfigResponse(val update_interval_sec: Long)

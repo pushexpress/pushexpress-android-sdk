@@ -13,12 +13,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.request.ImageRequest
 import com.pushexpress.sdk.BuildConfig
-import com.pushexpress.sdk.notification_actions.NotificationClickBroadcastReceiver
-
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
-
+import com.pushexpress.sdk.notification_actions.NotificationClickBroadcastReceiver
 import com.pushexpress.sdk.notification_actions.TrampolineActivity
 import com.pushexpress.sdk.utils.getBy
 import kotlinx.coroutines.launch
@@ -28,7 +26,7 @@ import kotlin.random.Random
 
 internal class NotificationDrawerImpl (
     private val context: Context
-) : com.pushexpress.sdk.notification.NotificationDrawer {
+) : NotificationDrawer {
     override fun showNotification(data: Map<String, String>) {
         // It's ok for now to post new notification each time
         // (or we need to maintain global px.msg_id -> local notificationId map)

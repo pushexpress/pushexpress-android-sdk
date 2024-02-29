@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "PushExpressSDK"
-include ':sdkpushexpress'
+include(":sdkpushexpress")

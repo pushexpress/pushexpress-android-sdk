@@ -4,7 +4,13 @@ import coil.ImageLoader
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.notification.NotificationDrawer
 import com.pushexpress.sdk.repository.ApiRepository
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 const val SDK_TAG = "SdkPushExpress"
 
@@ -33,6 +39,13 @@ object SdkPushExpress {
     fun initialize(appId: String) {
         scope.launch {
             sdkSettings.savePushExpressAppId(appId)
+            getInstanceId()
+        }
+    }
+
+    fun setTag(tagKey: String, tagValue: String) {
+        scope.launch {
+            sdkSettings.setTag(tagKey, tagValue)
         }
     }
 
@@ -57,6 +70,8 @@ object SdkPushExpress {
             sdkApi.stopApiLoop()
         }
     }
+
+    fun getInstanceId() = runBlocking { sdkApi.getInstanceId() }
 
     fun getInstanceToken() = runBlocking { sdkSettings.getSdkSettings().instanceToken }
 

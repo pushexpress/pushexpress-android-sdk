@@ -1,27 +1,17 @@
-package com.pushexpress.sdk.retrofit
+package com.pushexpress.sdk.network
 
 import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.security.KeyStore
-import java.util.*
+import java.util.Arrays
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.*
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
-internal class RetrofitBuilder(commonUrl: String) {
+object HttpClient {
 
-    private var retrofit: Retrofit
-    var sdkService: ApiService
-        private set
-
-    init {
-        retrofit = Retrofit.Builder()
-            .client(getUnsafeOkHttpClient())
-            .baseUrl(commonUrl)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        sdkService = retrofit.create(ApiService::class.java)
-    }
+    val client: OkHttpClient by lazy { getUnsafeOkHttpClient() }
 
     private fun getUnsafeOkHttpClient(): OkHttpClient {
         val trustManagerFactory =
