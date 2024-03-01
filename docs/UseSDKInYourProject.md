@@ -6,79 +6,126 @@ Push.Express SDK dependencies should be added to your project and you should hav
 
 ### Add required code
 
-1. Get your `PUSHEXPRESS_APP_ID` from [Push.Express](https://push.express) account page
+1. Get your `PUSHEXPRESS_APPLICATION_ID` from [Push.Express](https://push.express) account page
 
-   <img src="/docs/images/px-sdk-app-id.png" width=50%>
+   <img src="./images/px-sdk-app-id.png" width=50%>
 
-2. Add code to your Android Studio app
-   ```kotlin
-   import com.pushexpress.sdk.main.SdkPushExpress
+2. Set up important variables:
+```kotlin
+const val PUSHEXPRESS_APPLICATION_ID: String = "12345-67"
+const val EXTERNAL_ID: String = "123"
+const val TAGS: MutableMap<String, String> = mutableMapOf(
+    "audiences" to "my_audiences_tag",
+    "ad_id" to "my_ad_id_tag",
+    "webmaster" to "my_webmaster_tag",
+)
+```
+Lets break it down:
+- `PUSHEXPRESS_APPLICATION_ID` \
+That is an id of your Pushexpress application (refer to first point)
+- `EXTERNAL_ID` \
+This id represents and id that is meaningfull for you, mostly an id of chosen client
+- `TAGS` \
+Tags are needed to bind specific values to specific keys. Keys in this tag map are predefined, values, however can be modified. For example, you could set up audiences as `new_accounts` or `spent_less_than_25usd`, it is totally up to you. Setting up advertising id is not easy, you won't need it in most cases, but if you do - please contant our support [here](https://t.me/pushexpress). Set up webmaster tag only if you use it, leave it an empty string otherwise.
 
-   const val PUSHEXPRESS_APP_ID = "####-######"
+3. Make sure to handle notifications permission in your android application. The following snippets shows an example of how to do that.
 
-   class MainActivity : AppCompatActivity() {
-       override fun onCreate(savedInstanceState: Bundle?) {
-           super.onCreate(savedInstanceState)
+```kotlin
+    private fun askNotificationPermission() {
+        // This is only necessary for API Level > 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this,
+                    android.Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM SDK (and your app) can post notifications.
+            } else {
+                // Directly ask for the permission
+                notificationPermissionLauncher.launch(
+                    android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+```
+4. Full code snippet
+```kotlin
+package com.example.myapplication
 
-           SdkPushExpress.initialize(PUSHEXPRESS_APP_ID)
-           SdkPushExpress.setExternalId("<some_external_id>") // optional
-           SdkPushExpress.activate() // Don't forget to activate SDK workflow!
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.pushexpress.sdk.main.SdkPushExpress
 
-           Log.d("Myapp", "App Instance Token: " +
-                   SdkPushExpress.getInstanceToken())
-           Log.d("Myapp", "App External ID: " +
-                   SdkPushExpress.getExternalId())
-       }
-   }
-   ```
+const val PUSHEXPRESS_APPLICATION_ID: String = "12345-67"
+const val EXTERNAL_ID: String = "123"
+const val TAGS: MutableMap<String, String> = mutableMapOf(
+    "audiences" to "my_audiences_tag",
+    "ad_id" to "my_ad_id_tag",
+    "webmaster" to "my_webmaster_tag",
+)
 
-3. Ask for notification permissions
 
-   ```kotlin
-   // ...
-   import android.content.pm.PackageManager
-   import android.os.Build
-   import android.widget.Toast
-   import androidx.activity.result.contract.ActivityResultContracts
-   import androidx.core.content.ContextCompat
+class MainActivity : ComponentActivity() {
+    private val pxNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Notifications permission granted",
+                Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(
+                this,
+                "FCM can't post notifications without POST_NOTIFICATIONS permission",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
-   class MainActivity : AppCompatActivity() {
-       override fun onCreate(savedInstanceState: Bundle?) {
-           super.onCreate(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-           // ...
-           askNotificationPermission()
-       }
+        // Start of Pushexpress initialization
+        pxAskNotificationPermission()
 
-       private val notificationPermissionLauncher = registerForActivityResult(
-           ActivityResultContracts.RequestPermission()
-       ) { isGranted: Boolean ->
-           if (isGranted) {
-               Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT)
-                   .show()
-           } else {
-               Toast.makeText(
-                   this,
-                   "FCM can't post notifications without POST_NOTIFICATIONS permission",
-                   Toast.LENGTH_LONG
-               ).show()
-           }
-       }
+        // [MANDATORY]
+        SdkPushExpress.initialize(PUSHEXPRESS_APPLICATION_ID)
 
-       private fun askNotificationPermission() {
-           // This is only necessary for API Level > 33 (TIRAMISU)
-           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-               if (ContextCompat.checkSelfPermission(this,
-                       android.Manifest.permission.POST_NOTIFICATIONS) ==
-                   PackageManager.PERMISSION_GRANTED
-               ) {
-                   // FCM SDK (and your app) can post notifications.
-               } else {
-                   // Directly ask for the permission
-                   notificationPermissionLauncher.launch(
-                       android.Manifest.permission.POST_NOTIFICATIONS)
-               }
-           }
-       }
-   }
-   ```
+        // [OPTIONAL]
+        SdkPushExpress.setExternalId(EXTERNAL_ID)
+        // Iterate over tags [OPTIONAL]
+        TAGS.entries.map{ (name, value) ->
+            SdkPushExpress.setTag(name, value)
+        }
+        // Or add them one by one [OPTIONAL]
+        SdkPushExpress.setTag("audiences", "my_audiences_tag")
+        SdkPushExpress.setTag("ad_id", "my_ad_id_tag")
+        SdkPushExpress.setTag("webmaster", "my_webmaster_tag")
+
+        // Make sure to call activate() method
+        // SDK won't execute without it
+        // [MANDATORY]
+        SdkPushExpress.activate()
+        // End of Pushexpress initialization
+    }
+
+    private fun pxAskNotificationPermission() {
+        // This is only necessary for API Level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this,
+                    android.Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM SDK (and your app) can post notifications.
+            } else {
+                // Directly ask for the permission
+                pxNotificationPermissionLauncher.launch(
+                    android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+}
+```
