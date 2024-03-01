@@ -6,14 +6,6 @@
     - [Option 1: Add Firebase using the Firebase console](#option-1-add-firebase-using-the-firebase-console-mostly-manual) \
     - [Option 2: Add Firebase using the Firebase Assistant](#option-2-add-firebase-using-the-firebase-assistant-mostly-automated) 
 
-[Handling an api requests inside the application itself](#handling-an-api-requests-inside-the-application-itself) \
-    - [Set up manifest configuration file](#set-up-manifest-configuration-file) \
-    - [Set up Main Activity class](#set-up-main-activity-class) \
-    - [Set up kotlin class to handle firebase messsaging](#set-up-kotlin-class-to-handle-firebase-messsaging) \
-    - [Install OKHTTP library to manage http requests](#install-okhttp-library-to-manage-http-requests)
-
-[Some key notes about implementation](#some-key-notes-about-implementation)
-
 ## Set up a Firebase Cloud Messaging client app on Android
 ### Option 1: Add Firebase using the Firebase console (mostly manual).
 
@@ -23,10 +15,10 @@
 1. Go to the [Firebase console](https://console.firebase.google.com/).
 
     - In the center of the project overview page, click the Android icon or Add app to launch the setup workflow
-    <img src="/docs/images/get_started.png" width=50%>
+    <img src="./images/get_started.png" width=50%>
 
     - Enter your app's package name in the Android package name field (_This field is the only mandatory one, if you are not sure how to fill other fields - just don't_)
-    <img src="/docs/images/app_creation_menu.png" width=50%>
+    <img src="./images/app_creation_menu.png" width=50%>
 
 > [!WARNING]
 > Make sure to enter the package name that your app is actually using. The package name value is case-sensitive, and it cannot be changed for this Firebase Android app after it's registered with your Firebase project.
@@ -34,7 +26,7 @@
 > [!TIP]
 > Find your app's package name in your module (app-level) Gradle file, usually app/build.gradle (example package name: com.yourcompany.yourproject)
 
-<img src="/docs/images/android_app_id.png" width=50%>
+<img src="./images/android_app_id.png" width=50%>
 
 2. Click **Register app**.
 
@@ -90,8 +82,8 @@
 
 2. Open the Firebase Assistant: **Tools** > **Firebase**.
 
-    <img src="/docs/images/firebase_assistant.png" width=50%>
+    <img src="./images/firebase_assistant.png" width=50%>
 
 3. In a docked menu, choose _Cloud Messaging_ -> _Set up Firebase Cloud Messaging_
-    <img src="/docs/images/firebase_assistant_menu.png" width=50%>
+    <img src="./images/firebase_assistant_menu.png" width=50%>
 4. Follow the instructions up until second article.
