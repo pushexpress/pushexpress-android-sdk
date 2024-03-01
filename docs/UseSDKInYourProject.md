@@ -22,13 +22,16 @@ const val TAGS: MutableMap<String, String> = mutableMapOf(
 ```
 Lets break it down:
 - `PUSHEXPRESS_APPLICATION_ID` \
+**Requirement [MANDATORY]** \
 That is an id of your Pushexpress application (refer to first point)
 - `EXTERNAL_ID` \
+**Requirement [OPTIONAL]** \
 This id represents and id that is meaningfull for you, mostly an id of chosen client
 - `TAGS` \
-Tags are needed to bind specific values to specific keys. Keys in this tag map are predefined, values, however can be modified. For example, you could set up audiences as `new_accounts` or `spent_less_than_25usd`, it is totally up to you. Setting up advertising id is not easy, you won't need it in most cases, but if you do - please contant our support [here](https://t.me/pushexpress). Set up webmaster tag only if you use it, leave it an empty string otherwise.
+**Requirement [OPTIONAL]** \
+Tags are needed to bind specific values to specific keys. Keys in this tag map are predefined, values, however can be modified. For example, you could set up audiences as `new_accounts` or `spent_less_than_25usd`, it is totally up to you. Setting up advertising id is not easy, you won't need it in most cases, but if you do - please contact our support [here](https://t.me/pushexpress). **Set up webmaster tag only if you use it, leave it an empty string otherwise.**
 
-3. Make sure to handle notifications permission in your android application. The following snippets shows an example of how to do that.
+3. Make sure to handle notifications permission in your android application. The following snippet shows an example of how to do that.
 
 ```kotlin
     private fun askNotificationPermission() {
