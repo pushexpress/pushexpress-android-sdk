@@ -55,8 +55,13 @@ But you don't need (and it is really bad) to repeat this step if you just want t
    ```
    // settings.gradle (Project Settings) in Android Studio
 
+   // for groovy
    include ':sdkpushexpress'
    project(':sdkpushexpress').projectDir = new File('../pushexpress-android-sdk/sdkpushexpress')
+
+   // for gradle kts
+   include(":sdkpushexpress")
+   project(":sdkpushexpress").projectDir = file("../pushexpress-android-sdk/sdkpushexpress")
    ```
 
 2. In your **module (app-level)** Gradle file (`<project>/<app-module>/build.gradle`), add the SDK dependency
