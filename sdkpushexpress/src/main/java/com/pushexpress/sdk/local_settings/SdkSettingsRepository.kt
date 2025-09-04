@@ -13,4 +13,8 @@ interface SdkSettingsRepository {
     suspend fun saveFirebaseToken(firebaseToken: String)
 
     suspend fun getSdkSettings(): SdkSettings
+
+    suspend fun saveInstanceId(instanceId: String)
+    
+    suspend fun getInstanceId(): String?
 }

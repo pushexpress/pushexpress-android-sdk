@@ -8,7 +8,7 @@ import kotlinx.coroutines.*
 
 const val SDK_TAG = "SdkPushExpress"
 
-object SdkPushExpress {
+object SdkPushExpress { 
     private val handler = CoroutineExceptionHandler { _, exception ->
         println("$SDK_TAG: CoroutineExceptionHandler got $exception")
     }

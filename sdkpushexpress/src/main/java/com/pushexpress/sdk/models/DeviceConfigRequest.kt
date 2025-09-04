@@ -1,18 +1,23 @@
 package com.pushexpress.sdk.models
 
-data class DeviceConfigRequest(
-    val app_id: String,
-    val ic_token: String,
-    val ext_id: String,
-    val fcm_token: String,
+data class RegisterInstanceRequest(
+    val ic_token: String?,
+    val ext_id: String?
+)
+
+data class DeviceInfoRequest(
+    val transport_type: String,
+    val transport_token: String,
+    val platform_type: String,
     val lang: String,
-    val ad_id: String,
-    val country_net: String,
-    val country_sim: String,
-    val timezone: Int,
-    val install_ts: Long,
-    val onscreen_cnt: Int,
-    val onscreen_sec: Long,
-    val droid_api_ver: Int,
-    val sdk_ver: String,
+    val agent_name: String,
+    val tz_sec: Int,
+    val notif_perm_granted: Boolean,
+    val tags: DeviceTags
+)
+
+data class DeviceTags(
+    val adID: String,
+    val segment: String,
+    val webmaster: String
 )

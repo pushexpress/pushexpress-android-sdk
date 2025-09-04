@@ -5,6 +5,7 @@ import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import com.google.android.gms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo
+import androidx.core.app.NotificationManagerCompat
 
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.retrofit.RetrofitBuilder
@@ -79,13 +80,11 @@ internal class ApiRepositoryImpl(
             if (!workflowActivated) return@launch
 
             val settings = settingsRepository.getSdkSettings()
-            val evt = EventsLifecycleRequest(
-                app_id = settings.appId,
-                ic_token = settings.instanceToken,
-                event = event.event
-            )
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send LifecycleEvent: ${evt}")
-            sdkService.sendLifecycleEvent(evt)
+            val instanceId = settingsRepository.getInstanceId()
+            if (instanceId != null) {
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send LifecycleEvent")
+                sdkService.sendLifecycleEvent(settings.appId, instanceId)
+            }
         }
     }
 
@@ -104,14 +103,15 @@ internal class ApiRepositoryImpl(
             if (!workflowActivated) return@launch
 
             val sdkSettings = settingsRepository.getSdkSettings()
-            val evt = NotificationEventRequest(
-                app_id = sdkSettings.appId,
-                ic_token = sdkSettings.instanceToken,
-                event = event.event,
-                msg_id = messageId
-            )
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent: ${evt}")
-            sdkService.sendNotificationEvent(evt)
+            val instanceId = settingsRepository.getInstanceId()
+            if (instanceId != null) {
+                val evt = NotificationEventRequest(
+                    msg_id = messageId,
+                    event = event.event
+                )
+                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent: ${evt}")
+                sdkService.sendNotificationEvent(settings.appId, instanceId, evt)
+            }
         }
     }
 
@@ -141,37 +141,110 @@ internal class ApiRepositoryImpl(
 
     private suspend fun createAndSendDeviceConfig(): DeviceConfigResponse {
         if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendDeviceConfig")
-        val dc = createDevicesRequest()
-        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send DeviceConfig: $dc")
-        return sdkService.sendDeviceConfig(dc)
+        
+        val sdkSettings = settingsRepository.getSdkSettings()
+        
+        if (sdkSettings.instanceToken != null) {
+            val savedInstanceId = settingsRepository.getInstanceId()
+            
+            if (savedInstanceId != null) {
+                try {
+                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Using cached instanceId: $savedInstanceId")
+                    return sendDeviceInfo(savedInstanceId)
+                } catch (e: Exception) {
+                    if (e is HttpException && (e.code() == 404 || e.code() == 400)) {
+                        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Cached instance invalid, re-registering. Error: ${e.message}")
+                    } else {
+                        throw e
+                    }
+                }
+            }
+        }
+        
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Performing full instance registration")
+        val instanceId = registerInstance()
+        return sendDeviceInfo(instanceId)
     }
 
-    private suspend fun createDevicesRequest(): DeviceConfigRequest {
-        val advId = try {
-            getAdvertisingIdInfo(context).id.orEmpty()
-        } catch (e: Exception) {
-            null
-        }
+    private suspend fun registerInstance(): String {
         val sdkSettings = settingsRepository.getSdkSettings()
-
-        val dc = DeviceConfigRequest(
-            app_id = sdkSettings.appId,
+        
+        val request = RegisterInstanceRequest(
             ic_token = sdkSettings.instanceToken,
-            ext_id = sdkSettings.extId,
-            lang = Locale.getDefault().language,
-            country_net = getCountryCode(),
-            country_sim = getCountrySim().uppercase(),
-            timezone = TimeZone.getDefault().rawOffset / 1000,
-            install_ts = sdkSettings.installTs,
-            fcm_token = sdkSettings.firebaseToken.let {
-                if (it.isEmpty()) getFirebaseToken() else sdkSettings.firebaseToken },
-            ad_id = advId.orEmpty(),
-            onscreen_cnt = sdkSettings.onscreenCnt,
-            onscreen_sec = sdkSettings.onscreenSec,
-            droid_api_ver = Build.VERSION.SDK_INT,
-            sdk_ver = BuildConfig.VERSION_NAME,
+            ext_id = sdkSettings.extId
         )
-        return dc
+        
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Registering instance: $request")
+        
+        val response = sdkService.registerInstance(sdkSettings.appId, request)
+        
+        if (response.isSuccessful) {
+            val instanceResponse = response.body()
+            if (instanceResponse != null) {
+                settingsRepository.saveInstanceId(instanceResponse.id)
+                
+                if (instanceResponse.ic_token != null) {
+                    settingsRepository.saveInstanceToken(instanceResponse.ic_token)
+                }
+                
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, 
+                    "Instance registered: id=${instanceResponse.id}, just_created=${instanceResponse.just_created}")
+                
+                return instanceResponse.id
+            } else {
+                throw Exception("Empty response body from instance registration")
+            }
+        } else {
+            throw Exception("Instance registration failed: ${response.code()} - ${response.message()}")
+        }
+    }
+
+    private suspend fun sendDeviceInfo(instanceId: String): DeviceConfigResponse {
+        val advId = try {
+            AdvertisingIdClient.getAdvertisingIdInfo(context).id ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+        
+        val sdkSettings = settingsRepository.getSdkSettings()
+        val firebaseToken = if (sdkSettings.firebaseToken.isEmpty()) {
+            getFirebaseToken()
+        } else {
+            sdkSettings.firebaseToken
+        }
+
+        val areNotificationsEnabled = areNotificationsEnabled()
+        
+        val request = DeviceInfoRequest(
+            transport_type = "fcm.data",
+            transport_token = firebaseToken,
+            platform_type = "android",
+            lang = Locale.getDefault().language,
+            agent_name = BuildConfig.VERSION_NAME,
+            tz_sec = TimeZone.getDefault().rawOffset / 1000,
+            notif_perm_granted = areNotificationsEnabled,
+            tags = DeviceTags(
+                adID = advId,
+                segment = "",
+                webmaster = ""
+            )
+        )
+        
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Sending device info: $request")
+        
+        return sdkService.sendDeviceInfo(sdkSettings.appId, instanceId, request)
+    }
+
+    private fun areNotificationsEnabled(): Boolean {
+        return try {
+            val notificationManager = NotificationManagerCompat.from(context)
+            notificationManager.areNotificationsEnabled()
+        } catch (e: Exception) {
+            if (BuildConfig.LOG_DEBUG) {
+                Log.e(SDK_TAG, "Failed to check notification permission", e)
+            }
+            false
+        }
     }
 
     private suspend fun getFirebaseToken(): String {
@@ -200,6 +273,6 @@ internal class ApiRepositoryImpl(
     }
 
     companion object {
-        private const val SDK_PUSHEXPRESS_COMMON_URL = "https://sdk.push.express/r/v1/"
+        private const val SDK_PUSHEXPRESS_COMMON_URL = "https://core.push.express/api/r/v2/"
     }
 }
