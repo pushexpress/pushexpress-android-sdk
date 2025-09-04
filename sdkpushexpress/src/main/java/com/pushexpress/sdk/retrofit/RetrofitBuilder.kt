@@ -7,6 +7,7 @@ import java.security.KeyStore
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.*
+import com.pushexpress.sdk.retrofit.ApiService
 
 internal class RetrofitBuilder(commonUrl: String) {
 

@@ -4,12 +4,12 @@ import android.content.Context
 import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
-import com.google.android.gms.ads.identifier.AdvertisingIdClient.getAdvertisingIdInfo
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import androidx.core.app.NotificationManagerCompat
-
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.retrofit.RetrofitBuilder
 import com.pushexpress.sdk.utils.retryHttpIO
+import retrofit2.HttpException
 import kotlinx.coroutines.*
 import java.util.*
 
@@ -63,13 +63,6 @@ internal class ApiRepositoryImpl(
             heartBeatsJob.cancel()
         }
 
-    // send only once after appId or ExtId changes
-    /*override suspend fun sendDeviceConfig() =
-        withContext(scope.coroutineContext) {
-            createAndSendDeviceConfig()
-        }
-    */
-
     override fun sendLifecycleEvent(event: EventsLifecycle) {
         scope.launch {
             if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendLifecycleEvent[${event.event}]")
@@ -110,7 +103,7 @@ internal class ApiRepositoryImpl(
                     event = event.event
                 )
                 if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent: ${evt}")
-                sdkService.sendNotificationEvent(settings.appId, instanceId, evt)
+                sdkService.sendNotificationEvent(sdkSettings.appId, instanceId, evt)
             }
         }
     }
@@ -144,7 +137,8 @@ internal class ApiRepositoryImpl(
         
         val sdkSettings = settingsRepository.getSdkSettings()
         
-        if (sdkSettings.instanceToken != null) {
+        // Исправлено: проверка на пустую строку вместо null
+        if (sdkSettings.instanceToken.isNotEmpty()) {
             val savedInstanceId = settingsRepository.getInstanceId()
             
             if (savedInstanceId != null) {
@@ -176,16 +170,15 @@ internal class ApiRepositoryImpl(
         
         if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Registering instance: $request")
         
-        val response = sdkService.registerInstance(sdkSettings.appId, request)
+        val response = sdkService.registerInstance(
+            appId = sdkSettings.appId, 
+            request = request
+        )
         
         if (response.isSuccessful) {
             val instanceResponse = response.body()
             if (instanceResponse != null) {
                 settingsRepository.saveInstanceId(instanceResponse.id)
-                
-                if (instanceResponse.ic_token != null) {
-                    settingsRepository.saveInstanceToken(instanceResponse.ic_token)
-                }
                 
                 if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, 
                     "Instance registered: id=${instanceResponse.id}, just_created=${instanceResponse.just_created}")

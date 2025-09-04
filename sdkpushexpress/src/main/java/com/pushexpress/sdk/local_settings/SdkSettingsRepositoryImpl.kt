@@ -7,9 +7,11 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepository {
@@ -26,6 +28,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private val onscreenSec = longPreferencesKey(ONSCREEN_SEC)
     private val resumedTs = longPreferencesKey(RESUMED_TS)
     private val stoppedTs = longPreferencesKey(STOPPED_TS)
+    private val instanceIdKey = stringPreferencesKey(KEY_INSTANCE_ID)
 
     init {
         runBlocking {
@@ -61,6 +64,18 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                     "Got appId with existing install: $pushExpressAppId")
             }
         }
+    }
+
+    override suspend fun saveInstanceId(instanceId: String) {
+        context.dataStore.edit { settings ->
+            settings[instanceIdKey] = instanceId
+        }
+    }
+
+    override suspend fun getInstanceId(): String? {
+        return context.dataStore.data.map { preferences ->
+            preferences[instanceIdKey]
+        }.first()
     }
 
     override suspend fun updateAppResumed() {
@@ -112,6 +127,7 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             this[onscreenSec] = 0
             this[resumedTs] = 0
             this[stoppedTs] = 0
+            this[instanceIdKey] = ""
         }
     }
 
@@ -133,5 +149,6 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         private const val ONSCREEN_SEC = "onscreen_sec"
         private const val RESUMED_TS = "resumed_ts"
         private const val STOPPED_TS = "stopped_ts"
+        private const val KEY_INSTANCE_ID = "instance_id"
     }
 }

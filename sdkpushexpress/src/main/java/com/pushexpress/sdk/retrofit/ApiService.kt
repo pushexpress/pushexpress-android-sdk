@@ -7,7 +7,6 @@ import com.pushexpress.sdk.models.RegisterInstanceRequest
 import com.pushexpress.sdk.models.RegisterInstanceResponse
 import com.pushexpress.sdk.models.DeviceInfoRequest
 import com.pushexpress.sdk.models.DeviceConfigResponse
-import com.pushexpress.sdk.models.EventsLifecycleRequest
 import com.pushexpress.sdk.models.NotificationEventRequest
 import retrofit2.Response
 
@@ -19,7 +18,7 @@ internal interface ApiService {
         @Path("instanceId") instanceId: String,
     ): Response<Unit>
 
-    @POST("/apps/{appId}instances/{instanceId}/events/notification?origin=droid")
+    @POST("/apps/{appId}/instances/{instanceId}/events/notification?origin=droid")
     suspend fun sendNotificationEvent(
         @Path("appId") appId: String,
         @Path("instanceId") instanceId: String,
