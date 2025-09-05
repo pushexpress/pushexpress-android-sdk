@@ -222,7 +222,9 @@ internal class ApiRepositoryImpl(
             )
         )
         
-        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Sending device info: $request,$instanceId,$sdkSettings.appId" )
+        if (BuildConfig.LOG_RELEASE) {
+            Log.d(SDK_TAG, "Sending device info: $request, instanceId: $instanceId, appId: ${sdkSettings.appId}")
+        }
         
         return sdkService.sendDeviceInfo(sdkSettings.appId, instanceId, request)
     }
