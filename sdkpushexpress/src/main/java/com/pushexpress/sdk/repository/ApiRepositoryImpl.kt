@@ -161,9 +161,11 @@ internal class ApiRepositoryImpl(
 
     private suspend fun registerInstance(): String {
         val sdkSettings = settingsRepository.getSdkSettings()
+
+        val uuidv4 = UUID.randomUUID().toString()
         
         val request = RegisterInstanceRequest(
-            ic_token = sdkSettings.instanceToken,
+            ic_token = uuidv4,
             ext_id = sdkSettings.extId
         )
         
