@@ -227,8 +227,22 @@ internal class ApiRepositoryImpl(
         if (BuildConfig.LOG_RELEASE) {
             Log.d(SDK_TAG, "Sending device info: $request, instanceId: $instanceId, appId: ${sdkSettings.appId}")
         }
-        
-        return sdkService.sendDeviceInfo(sdkSettings.appId, instanceId, request)
+
+        val response = sdkService.sendDeviceInfo(sdkSettings.appId, instanceId, request)
+    
+        if (response.isSuccessful) {
+            val deviceConfigResponse = response.body()
+            if (deviceConfigResponse != null) {
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, 
+                    "Device info sent successfully: $deviceConfigResponse")
+                
+                return deviceConfigResponse
+            } else {
+                throw Exception("Empty response body from device info sending")
+            }
+        } else {
+            throw Exception("Device info sending failed: ${response.code()} - ${response.message()}")
+        }
     }
 
     private fun areNotificationsEnabled(): Boolean {

@@ -5,5 +5,5 @@ data class DeviceConfigResponse(val device_intvl: Long, val hbeat_intvl: Long)
 data class RegisterInstanceResponse(
     val id: String,
     val just_created: Boolean,
-    val ic_token: String? = null // Сервер может вернуть новый токен
+    val ic_token: String? = null
 )
