@@ -137,7 +137,6 @@ internal class ApiRepositoryImpl(
         
         val sdkSettings = settingsRepository.getSdkSettings()
         
-        // Исправлено: проверка на пустую строку вместо null
         if (sdkSettings.instanceToken.isNotEmpty()) {
             val savedInstanceId = settingsRepository.getInstanceId()
             
@@ -223,7 +222,7 @@ internal class ApiRepositoryImpl(
             )
         )
         
-        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Sending device info: $request")
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Sending device info: $request,$instanceId,$sdkSettings.appId" )
         
         return sdkService.sendDeviceInfo(sdkSettings.appId, instanceId, request)
     }
