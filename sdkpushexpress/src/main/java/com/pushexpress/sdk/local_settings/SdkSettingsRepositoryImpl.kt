@@ -7,9 +7,11 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepository {
@@ -26,6 +28,13 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
     private val onscreenSec = longPreferencesKey(ONSCREEN_SEC)
     private val resumedTs = longPreferencesKey(RESUMED_TS)
     private val stoppedTs = longPreferencesKey(STOPPED_TS)
+    private val instanceIdKey = stringPreferencesKey(KEY_INSTANCE_ID)
+    private val uuidv4Key = stringPreferencesKey("uuidv4_token")
+    @Volatile
+    private var cachedUuidv4: String? = null
+
+    @Volatile
+    private var cachedInstanceId: String? = null
 
     init {
         runBlocking {
@@ -34,6 +43,18 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
                     zeroSettings(settings)
                 }
             }
+            preloadInstanceId()
+        }
+    }
+
+    private suspend fun preloadInstanceId() {
+        try {
+            cachedInstanceId = context.dataStore.data
+                .map { preferences -> preferences[instanceIdKey] }
+                .first()
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Preloaded instanceId: $cachedInstanceId")
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Failed to preload instanceId", e)
         }
     }
 
@@ -45,6 +66,39 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         context.dataStore.edit { settings ->
             settings[this.extId] = externalId
         }
+    }
+
+    override suspend fun saveUuidv4(token: String) {
+        context.dataStore.edit { preferences ->
+            preferences[uuidv4Key] = token
+        }
+        cachedUuidv4 = token
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "UUIDv4 saved: $token")
+    }
+
+    override suspend fun getUuidv4(): String? { 
+        if (cachedUuidv4 != null) {
+            return cachedUuidv4
+        }
+        
+        return try {
+            val token = context.dataStore.data
+                .map { preferences -> preferences[uuidv4Key] }
+                .first()
+            cachedUuidv4 = token
+            token
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Failed to get UUIDv4", e)
+            null
+        }
+    }
+
+    override suspend fun deleteUuidv4() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(uuidv4Key)
+        }
+        cachedUuidv4 = null
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "UUIDv4 deleted")
     }
 
     override suspend fun savePushExpressAppId(pushExpressAppId: String) {
@@ -62,6 +116,66 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             }
         }
     }
+
+    override suspend fun saveInstanceId(instanceId: String) {
+        context.dataStore.edit { settings ->
+            settings[instanceIdKey] = instanceId
+        }
+        cachedInstanceId = instanceId
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "InstanceId saved to cache: $instanceId")
+    }
+
+    override suspend fun getInstanceId(): String? {
+        if (cachedInstanceId != null) {
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "InstanceId from cache: $cachedInstanceId")
+            return cachedInstanceId
+        }
+        
+        return try {
+            val instanceId = context.dataStore.data
+                .map { preferences -> preferences[instanceIdKey] }
+                .first()
+            cachedInstanceId = instanceId
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "InstanceId loaded from DataStore: $instanceId")
+            instanceId
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Failed to get instanceId from DataStore", e)
+            null
+        }
+    }
+
+    override suspend fun clearInstanceIdCache() {
+        cachedInstanceId = null
+        deleteInstanceId()
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "InstanceId cache cleared")
+    }
+
+    override suspend fun deleteInstanceId() {
+        try {
+            context.dataStore.edit { preferences ->
+                preferences.remove(instanceIdKey)
+            }
+            cachedInstanceId = null
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ InstanceId completely deleted")
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "❌ Failed to delete instanceId", e)
+            throw e
+        }
+    }
+
+    override suspend fun deleteExternalId() {
+        try {
+            context.dataStore.edit { preferences ->
+                preferences.remove(extId)
+            }
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ extId completely deleted")
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "❌ Failed to delete extId", e)
+            throw e
+        }
+    }
+
+    fun isInstanceIdCached(): Boolean = cachedInstanceId != null
 
     override suspend fun updateAppResumed() {
         context.dataStore.edit { settings ->
@@ -112,7 +226,9 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
             this[onscreenSec] = 0
             this[resumedTs] = 0
             this[stoppedTs] = 0
+            this[instanceIdKey] = ""
         }
+        cachedInstanceId = null
     }
 
     private fun genNewInstall(settings: MutablePreferences, pxAppId: String) {
@@ -133,5 +249,6 @@ class SdkSettingsRepositoryImpl(private val context: Context) : SdkSettingsRepos
         private const val ONSCREEN_SEC = "onscreen_sec"
         private const val RESUMED_TS = "resumed_ts"
         private const val STOPPED_TS = "stopped_ts"
+        private const val KEY_INSTANCE_ID = "instance_id"
     }
 }

@@ -1,6 +1,7 @@
 package com.pushexpress.sdk.main
 
 import coil.ImageLoader
+import android.util.Log
 import com.pushexpress.sdk.local_settings.SdkSettingsRepository
 import com.pushexpress.sdk.notification.NotificationDrawer
 import com.pushexpress.sdk.repository.ApiRepository
@@ -8,11 +9,11 @@ import kotlinx.coroutines.*
 
 const val SDK_TAG = "SdkPushExpress"
 
-object SdkPushExpress {
+object SdkPushExpress { 
     private val handler = CoroutineExceptionHandler { _, exception ->
         println("$SDK_TAG: CoroutineExceptionHandler got $exception")
     }
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob() + handler)
+    val scope = CoroutineScope(Dispatchers.IO + SupervisorJob() + handler)
     internal lateinit var sdkApi: ApiRepository
     internal lateinit var sdkSettings: SdkSettingsRepository
     internal lateinit var imageLoader: ImageLoader
@@ -37,25 +38,39 @@ object SdkPushExpress {
     }
 
     fun setExternalId(externalId: String) {
-        scope.launch {
+        runBlocking {
             sdkSettings.savePushExpressExternalId(externalId)
         }
     }
 
     fun activate() {
-        if (workflowActivated) return
+        Log.d(SDK_TAG, "Activate called, workflowActivated: $workflowActivated")
+        if (workflowActivated) {
+            Log.d(SDK_TAG, "Already activated")
+            return
+        }
+
         workflowActivated = true
         scope.launch {
-            sdkApi.doApiLoop()
+            Log.d(SDK_TAG, "Starting API loop")
+            try {
+                sdkApi.doApiLoop()
+            } catch (e: Exception) {
+                Log.e(SDK_TAG, "API loop failed: ${e.message}", e)
+            }
         }
     }
 
     fun deactivate() {
-        if (!workflowActivated) return
         workflowActivated = false
-        scope.launch {
-            sdkApi.stopApiLoop()
+        runBlocking {
+            try {
+                sdkApi.stopApiLoop()
+            } catch (e: Exception) {
+                Log.e(SDK_TAG, "Error in stopApiLoop: ${e.message}")
+            }
         }
+        scope.coroutineContext.cancelChildren()
     }
 
     fun getInstanceToken() = runBlocking { sdkSettings.getSdkSettings().instanceToken }
