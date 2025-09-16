@@ -15,6 +15,19 @@ interface SdkSettingsRepository {
     suspend fun getSdkSettings(): SdkSettings
 
     suspend fun saveInstanceId(instanceId: String)
+
+    suspend fun saveUuidv4(token: String)
     
     suspend fun getInstanceId(): String?
+
+    suspend fun getUuidv4(): String? 
+
+    suspend fun clearInstanceIdCache()
+
+    suspend fun deleteInstanceId()
+
+    suspend fun deleteExternalId()
+
+    suspend fun deleteUuidv4() 
+
 }

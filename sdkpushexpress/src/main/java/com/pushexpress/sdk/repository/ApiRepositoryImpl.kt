@@ -12,11 +12,15 @@ import com.pushexpress.sdk.utils.retryHttpIO
 import retrofit2.HttpException
 import kotlinx.coroutines.*
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
+import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.main.SdkPushExpress.workflowActivated
 import com.pushexpress.sdk.models.*
 import kotlin.coroutines.resume
@@ -31,27 +35,27 @@ internal class ApiRepositoryImpl(
     private val sdkService = builder.sdkService
     private var devicesJob: Job = Job()
     private var heartBeatsJob: Job = Job()
-    private var commonJob: Job = SupervisorJob()
+  
+
+    private val eventQueue = ConcurrentLinkedQueue<Pair<String, NotificationEvent>>()
+    private val eventMutex = Mutex()
 
     private val handler = CoroutineExceptionHandler { _, exception ->
         println("$SDK_TAG: CoroutineExceptionHandler got $exception")
     }
-    private val scope = CoroutineScope(Dispatchers.IO + commonJob + handler)
+
+    private val scope = SdkPushExpress.scope
 
     override suspend fun doApiLoop() =
         withContext(scope.coroutineContext) {
             if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop iteration started")
-
-            devicesJob.cancel()
-            heartBeatsJob.cancel()
             try {
                 val res = retryHttpIO(times = 10) { createAndSendDeviceConfig() }
-                repeatRequestDevices(res.device_intvl)
-                repeatRequestHeartBeat(res.hbeat_intvl)
+                repeatRequestDevices(120)
+                repeatRequestHeartBeat(30)
             } catch (e: Exception) {
                 if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop: unhandled error: $e")
-                // repeat loop now
-                repeatRequestDevices(1)
+                repeatRequestDevices(10)
             }
         }
 
@@ -59,8 +63,59 @@ internal class ApiRepositoryImpl(
         withContext(scope.coroutineContext) {
             if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop stopped")
 
-            devicesJob.cancel()
-            heartBeatsJob.cancel()
+            Log.d(SDK_TAG, "Getting settings...")
+            val sdkSettings = settingsRepository.getSdkSettings()
+        
+            val instanceId = settingsRepository.getInstanceId()
+            Log.d(SDK_TAG, "After getInstanceId(): $instanceId")
+
+            if (instanceId != null) {
+                val request = RegisterInstanceRequest(
+                    ic_token = settingsRepository.getUuidv4() ?: "",
+                    ext_id = sdkSettings.extId
+                )
+                try {
+                    val response = sdkService.deactivateInstance(
+                        appId = sdkSettings.appId,
+                        instanceId = instanceId,
+                        request = request
+                    )
+                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "kfkgdlgkl : ${request}")
+                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Instance deactivated: ${response.code()}")
+                } catch (e: Exception) {
+                    Log.e(SDK_TAG, "❌ Failed to deactivate instance", e)
+                }
+            } else {
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "⚠️ No instanceId to deactivate")
+            }
+
+            try {
+                settingsRepository.clearInstanceIdCache()
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ InstanceId cache cleared")
+                settingsRepository.deleteExternalId()
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ deleteExternalId cleared")
+            } catch (e: Exception) {
+                Log.e(SDK_TAG, "❌ Failed to clear instanceId cache", e)
+            }
+
+            try {
+                eventMutex.withLock {
+                    eventQueue.clear()
+                }
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Event queue cleared: ${eventQueue.size} events")
+            } catch (e: Exception) {
+                    Log.e(SDK_TAG, "❌ Failed to clear event queue", e)
+            }
+
+            try {
+                settingsRepository.deleteInstanceId()
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ InstanceId removed from DataStore")
+            } catch (e: Exception) {
+                Log.e(SDK_TAG, "❌ Failed to remove instanceId from DataStore", e)
+            }
+
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Workflow deactivated")
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "🛑 ApiLoop completely stopped and cleaned")
         }
 
     override fun sendLifecycleEvent(event: EventsLifecycle) {
@@ -93,20 +148,75 @@ internal class ApiRepositoryImpl(
             if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG,
                 "sendNotificationEvent[$messageId, ${event.event}]")
 
-            if (!workflowActivated) return@launch
+            if (!workflowActivated) {
+                workflowActivated = true
+                Log.d(SDK_TAG, "✅ Workflow activated by first notification event")
+            }
 
-            val sdkSettings = settingsRepository.getSdkSettings()
             val instanceId = settingsRepository.getInstanceId()
-            if (instanceId != null) {
-                val evt = NotificationEventRequest(
-                    msg_id = messageId,
-                    event = event.event
-                )
-                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent: ${evt}")
-                sdkService.sendNotificationEvent(sdkSettings.appId, instanceId, evt)
+
+            if (instanceId == null) {
+                addToQueue(messageId, event)
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "📦 Event queued: $messageId, queue size: ${eventQueue.size}")
+                return@launch
+            }
+
+            sendEventImmediately(messageId, event, instanceId)
+        }
+    }
+
+    private suspend fun addToQueue(messageId: String, event: NotificationEvent) {
+        eventMutex.withLock {
+            eventQueue.add(Pair(messageId, event))
+        }
+    }
+
+    private suspend fun sendEventImmediately(
+        messageId: String, 
+        event: NotificationEvent, 
+        instanceId: String
+    ) {
+        try {
+            val sdkSettings = settingsRepository.getSdkSettings()
+            val evt = NotificationEventRequest(
+                msg_id = messageId,
+                event = event.event
+            )
+            
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Send NotificationEvent Check: ${sdkSettings.appId}, $instanceId, $evt")
+            
+            val response = sdkService.sendNotificationEvent(sdkSettings.appId, instanceId, evt)
+            
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Server response: ${response.code()} - ${response.body()}")
+            Log.d(SDK_TAG, "✅ Success! Response: ${response.code()}")
+            
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "❌ Error sending event: $messageId", e)
+            if (e is HttpException && (e.code() == 404 || e.code() == 400)) {
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Invalid instance, clearing cache")
+            //    settingsRepository.clearInstanceIdCache()
             }
         }
     }
+
+    private suspend fun processEventQueue() {
+        val instanceId = settingsRepository.getInstanceId() ?: return
+        
+        eventMutex.withLock {
+            val iterator = eventQueue.iterator()
+            while (iterator.hasNext()) {
+                val eventPair = iterator.next()
+                val (messageId, event) = eventPair
+                sendEventImmediately(messageId, event, instanceId)
+                iterator.remove()
+                delay(50)
+            }
+            
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Event queue processed")
+        }
+    }
+
+    fun getEventQueueSize(): Int = eventQueue.size
 
     private fun repeatRequestDevices(timeSec: Long) {
         devicesJob = scope.launch {
@@ -140,7 +250,7 @@ internal class ApiRepositoryImpl(
         if (sdkSettings.instanceToken.isNotEmpty()) {
             val savedInstanceId = settingsRepository.getInstanceId()
             
-            if (savedInstanceId != null) {
+            if (savedInstanceId != null && savedInstanceId.isNotEmpty()) {
                 try {
                     if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Using cached instanceId: $savedInstanceId")
                     return sendDeviceInfo(savedInstanceId)
@@ -156,13 +266,28 @@ internal class ApiRepositoryImpl(
         
         if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Performing full instance registration")
         val instanceId = registerInstance()
+
+        if (instanceId.isEmpty()) {
+            throw Exception("Failed to register instance: received empty instanceId")
+        }
+        
+        settingsRepository.saveInstanceId(instanceId)
+        
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Successfully registered new instance: $instanceId")
         return sendDeviceInfo(instanceId)
     }
 
     private suspend fun registerInstance(): String {
         val sdkSettings = settingsRepository.getSdkSettings()
 
-        val uuidv4 = UUID.randomUUID().toString()
+        val uuidv4 = settingsRepository.getUuidv4() ?: UUID.randomUUID().toString().also {
+            settingsRepository.saveUuidv4(it)
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Generated new UUIDv4: $it")
+        }
+            
+        if (BuildConfig.LOG_DEBUG && settingsRepository.getUuidv4() != null) {
+            Log.d(SDK_TAG, "Using existing UUIDv4: $uuidv4")
+        }
         
         val request = RegisterInstanceRequest(
             ic_token = uuidv4,
@@ -180,6 +305,7 @@ internal class ApiRepositoryImpl(
             val instanceResponse = response.body()
             if (instanceResponse != null) {
                 settingsRepository.saveInstanceId(instanceResponse.id)
+                settingsRepository.saveUuidv4(uuidv4)
                 
                 if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, 
                     "Instance registered: id=${instanceResponse.id}, just_created=${instanceResponse.just_created}")
@@ -194,56 +320,55 @@ internal class ApiRepositoryImpl(
     }
 
     private suspend fun sendDeviceInfo(instanceId: String): DeviceConfigResponse {
-        val advId = try {
-            AdvertisingIdClient.getAdvertisingIdInfo(context).id ?: ""
-        } catch (e: Exception) {
-            ""
-        }
-        
-        val sdkSettings = settingsRepository.getSdkSettings()
-        val firebaseToken = if (sdkSettings.firebaseToken.isEmpty()) {
-            getFirebaseToken()
-        } else {
-            sdkSettings.firebaseToken
-        }
-
-        val areNotificationsEnabled = areNotificationsEnabled()
-        
-        val request = DeviceInfoRequest(
-            transport_type = "fcm.data",
-            transport_token = firebaseToken,
-            platform_type = "android",
-            lang = Locale.getDefault().language,
-            agent_name = BuildConfig.VERSION_NAME,
-            tz_sec = TimeZone.getDefault().rawOffset / 1000,
-            notif_perm_granted = areNotificationsEnabled,
-            tags = DeviceTags(
-                adID = advId,
-                segment = "",
-                webmaster = ""
-            )
-        )
-        
-        if (BuildConfig.LOG_RELEASE) {
-            Log.d(SDK_TAG, "Sending device info: $request, instanceId: $instanceId, appId: ${sdkSettings.appId}")
-        }
-
-        val response = sdkService.sendDeviceInfo(sdkSettings.appId, instanceId, request)
+    val advId = try {
+        AdvertisingIdClient.getAdvertisingIdInfo(context).id ?: ""
+    } catch (e: Exception) {
+        ""
+    }
     
-        if (response.isSuccessful) {
-            val deviceConfigResponse = response.body()
-            if (deviceConfigResponse != null) {
-                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, 
-                    "Device info sent successfully: $deviceConfigResponse")
-                
-                return deviceConfigResponse
-            } else {
-                throw Exception("Empty response body from device info sending")
-            }
+    val sdkSettings = settingsRepository.getSdkSettings()
+    val firebaseToken = if (sdkSettings.firebaseToken.isEmpty()) {
+        getFirebaseToken()
+    } else {
+        sdkSettings.firebaseToken
+    }
+
+    val areNotificationsEnabled = areNotificationsEnabled()
+    
+    val request = DeviceInfoRequest(
+        transport_type = "fcm.data",
+        transport_token = firebaseToken,
+        platform_type = "android",
+        lang = Locale.getDefault().language,
+        agent_name = BuildConfig.VERSION_NAME,
+        tz_sec = TimeZone.getDefault().rawOffset / 1000,
+        notif_perm_granted = areNotificationsEnabled,
+        tags = DeviceTags(
+            adID = advId,
+            segment = "",
+            webmaster = ""
+        )
+    )
+    
+    if (BuildConfig.LOG_RELEASE) {
+        Log.d(SDK_TAG, "Sending device info: $request, instanceId: $instanceId, appId: ${sdkSettings.appId}")
+    }
+
+    try {
+        val deviceConfigResponse = sdkService.sendDeviceInfo(sdkSettings.appId, instanceId, request)
+        
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, 
+            "Device info sent successfully: $deviceConfigResponse")
+        
+        return deviceConfigResponse
+    } catch (e: Exception) {
+        if (e is HttpException) {
+            throw Exception("Device info sending failed: ${e.code()} - ${e.message()}")
         } else {
-            throw Exception("Device info sending failed: ${response.code()} - ${response.message()}")
+            throw Exception("Device info sending failed: ${e.message}")
         }
     }
+}
 
     private fun areNotificationsEnabled(): Boolean {
         return try {
