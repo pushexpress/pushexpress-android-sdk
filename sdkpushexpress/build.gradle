@@ -14,7 +14,7 @@ android {
     defaultConfig {
         minSdk 23
         targetSdk 33
-        versionCode 4
+        versionCode 5
         versionName project.version
         buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
