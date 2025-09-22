@@ -50,7 +50,7 @@ internal class ApiRepositoryImpl(
         withContext(scope.coroutineContext) {
             if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop iteration started")
             try {
-                val res = retryHttpIO(times = 10) { createAndSendDeviceConfig() }
+                retryHttpIO(times = 10) { createAndSendDeviceConfig() } 
                 repeatRequestDevices(120)
                 repeatRequestHeartBeat(30)
             } catch (e: Exception) {
@@ -80,7 +80,7 @@ internal class ApiRepositoryImpl(
                         instanceId = instanceId,
                         request = request
                     )
-                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "kfkgdlgkl : ${request}")
+                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Request: ${request}")
                     if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Instance deactivated: ${response.code()}")
                 } catch (e: Exception) {
                     Log.e(SDK_TAG, "❌ Failed to deactivate instance", e)
@@ -295,6 +295,7 @@ internal class ApiRepositoryImpl(
         )
         
         if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Registering instance: $request")
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "sdkSettings : $sdkSettings")
         
         val response = sdkService.registerInstance(
             appId = sdkSettings.appId, 

@@ -32,7 +32,7 @@ object SdkPushExpress {
     }
 
     fun initialize(appId: String) {
-        scope.launch {
+        runBlocking {
             sdkSettings.savePushExpressAppId(appId)
         }
     }
