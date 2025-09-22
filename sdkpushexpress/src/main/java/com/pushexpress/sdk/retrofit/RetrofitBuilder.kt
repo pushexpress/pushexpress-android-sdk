@@ -45,7 +45,7 @@ internal class RetrofitBuilder(commonUrl: String) {
             .retryOnConnectionFailure(true)
             .followRedirects(true)
             .followSslRedirects(true)
-            .hostnameVerifier { hostname, session -> true }
+            .hostnameVerifier { _, _ -> true }
             .sslSocketFactory(sslSocketFactory, trustManager).build()
     }
 }
