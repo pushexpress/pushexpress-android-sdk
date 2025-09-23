@@ -46,77 +46,82 @@ internal class ApiRepositoryImpl(
 
     private val scope = SdkPushExpress.scope
 
-    override suspend fun doApiLoop() =
-        withContext(scope.coroutineContext) {
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop iteration started")
-            try {
-                retryHttpIO(times = 10) { createAndSendDeviceConfig() } 
-                repeatRequestDevices(120)
-                repeatRequestHeartBeat(30)
-            } catch (e: Exception) {
-                if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop: unhandled error: $e")
-                repeatRequestDevices(10)
-            }
+    override suspend fun doApiLoop() {
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop iteration started")
+        try {
+            val res = retryHttpIO(times = 10) { createAndSendDeviceConfig() }
+            repeatRequestDevices(120)
+            repeatRequestHeartBeat(30)
+        } catch (e: Exception) {
+            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop: unhandled error: $e")
         }
+    }
 
-    override suspend fun stopApiLoop() =
-        withContext(scope.coroutineContext) {
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop stopped")
+    override suspend fun stopApiLoop() {
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop stopped")
 
-            Log.d(SDK_TAG, "Getting settings...")
-            val sdkSettings = settingsRepository.getSdkSettings()
-        
-            val instanceId = settingsRepository.getInstanceId()
-            Log.d(SDK_TAG, "After getInstanceId(): $instanceId")
+        Log.d(SDK_TAG, "Getting settings...")
+        val sdkSettings = settingsRepository.getSdkSettings()
+    
+        val instanceId = settingsRepository.getInstanceId()
+        Log.d(SDK_TAG, "After getInstanceId(): $instanceId")
 
-            if (instanceId != null) {
-                val request = RegisterInstanceRequest(
-                    ic_token = settingsRepository.getUuidv4() ?: "",
-                    ext_id = sdkSettings.extId
+        if (instanceId != null) {
+            val request = RegisterInstanceRequest(
+                ic_token = settingsRepository.getUuidv4() ?: "",
+                ext_id = sdkSettings.extId
+            )
+            try {
+                val response = sdkService.deactivateInstance(
+                    appId = sdkSettings.appId,
+                    instanceId = instanceId,
+                    request = request
                 )
-                try {
-                    val response = sdkService.deactivateInstance(
-                        appId = sdkSettings.appId,
-                        instanceId = instanceId,
-                        request = request
-                    )
-                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Request: ${request}")
-                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Instance deactivated: ${response.code()}")
-                } catch (e: Exception) {
-                    Log.e(SDK_TAG, "❌ Failed to deactivate instance", e)
-                }
-            } else {
-                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "⚠️ No instanceId to deactivate")
-            }
-
-            try {
-                settingsRepository.clearInstanceIdCache()
-                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ InstanceId cache cleared")
-                settingsRepository.deleteExternalId()
-                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ deleteExternalId cleared")
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "kfkgdlgkl : ${request}")
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Instance deactivated: ${response.code()}")
             } catch (e: Exception) {
-                Log.e(SDK_TAG, "❌ Failed to clear instanceId cache", e)
+                Log.e(SDK_TAG, "❌ Failed to deactivate instance", e)
             }
-
-            try {
-                eventMutex.withLock {
-                    eventQueue.clear()
-                }
-                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Event queue cleared: ${eventQueue.size} events")
-            } catch (e: Exception) {
-                    Log.e(SDK_TAG, "❌ Failed to clear event queue", e)
-            }
-
-            try {
-                settingsRepository.deleteInstanceId()
-                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ InstanceId removed from DataStore")
-            } catch (e: Exception) {
-                Log.e(SDK_TAG, "❌ Failed to remove instanceId from DataStore", e)
-            }
-
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Workflow deactivated")
-            if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "🛑 ApiLoop completely stopped and cleaned")
+        } else {
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "⚠️ No instanceId to deactivate")
         }
+
+        try {
+            settingsRepository.clearInstanceIdCache()
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ InstanceId cache cleared")
+            settingsRepository.deleteExternalId()
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ deleteExternalId cleared")
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "❌ Failed to clear instanceId cache", e)
+        }
+
+        try {
+            eventMutex.withLock {
+                eventQueue.clear()
+            }
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Event queue cleared: ${eventQueue.size} events")
+        } catch (e: Exception) {
+                Log.e(SDK_TAG, "❌ Failed to clear event queue", e)
+        }
+
+        try {
+            settingsRepository.deleteInstanceId()
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ InstanceId removed from DataStore")
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "❌ Failed to remove instanceId from DataStore", e)
+        }
+
+        try {
+            devicesJob.cancel("Stopping API loop")
+            heartBeatsJob.cancel("Stopping API loop")
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Jobs cancelled")
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "❌ Error cancelling jobs", e)
+        }
+
+        if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "✅ Workflow deactivated")
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "🛑 ApiLoop completely stopped and cleaned")
+    }
 
     override fun sendLifecycleEvent(event: EventsLifecycle) {
         scope.launch {
@@ -220,27 +225,38 @@ internal class ApiRepositoryImpl(
 
     private fun repeatRequestDevices(timeSec: Long) {
         devicesJob = scope.launch {
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestDevices")
-            timeSec.let {
-                delay(it * 1000)
-                ensureActive()
-                doApiLoop()
+            try {
+                 while (isActive) {
+                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestDevices")
+                    delay(timeSec * 1000)
+                    if (isActive) {
+                        doApiLoop()
+                    }
+                 }
+            }  catch (e: CancellationException) {
+                if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Devices job cancelled normally")
+            } catch (e: Exception) {
+                Log.e(SDK_TAG, "Devices job error", e)
             }
         }
     }
 
     private fun repeatRequestHeartBeat(timeSec: Long) {
-        heartBeatsJob = scope.launch {
-            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestHeartBeat")
-            timeSec.let {
-                while (isActive) {
-                    delay(it * 1000)
-                    ensureActive()
+    heartBeatsJob = scope.launch {
+        try {
+            while (isActive) {
+                delay(timeSec * 1000)
+                if (isActive) {
                     sendLifecycleEvent(EventsLifecycle.HBEAT)
                 }
             }
+        } catch (e: CancellationException) {
+            if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "Heartbeat job cancelled normally")
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Heartbeat job error", e)
         }
     }
+}
 
     private suspend fun createAndSendDeviceConfig(): DeviceConfigResponse {
         if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "sendDeviceConfig")
@@ -295,7 +311,6 @@ internal class ApiRepositoryImpl(
         )
         
         if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "Registering instance: $request")
-        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "sdkSettings : $sdkSettings")
         
         val response = sdkService.registerInstance(
             appId = sdkSettings.appId, 
