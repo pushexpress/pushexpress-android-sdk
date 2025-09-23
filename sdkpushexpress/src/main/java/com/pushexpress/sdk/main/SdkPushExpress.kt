@@ -22,28 +22,15 @@ object SdkPushExpress {
     @Volatile
     internal var workflowActivated: Boolean = false
 
-    @Deprecated("Deprecated. Use initialize(id); activate() instead.",
-        ReplaceWith("initialize(id); activate()"))
-    fun setAppId(appId: String) {
-        scope.launch {
-            sdkSettings.savePushExpressAppId(appId)
-        }
-        activate()
+    suspend fun initialize(appId: String) {
+        sdkSettings.savePushExpressAppId(appId)
     }
 
-    fun initialize(appId: String) {
-        runBlocking {
-            sdkSettings.savePushExpressAppId(appId)
-        }
+    suspend fun setExternalId(externalId: String) {
+        sdkSettings.savePushExpressExternalId(externalId)
     }
 
-    fun setExternalId(externalId: String) {
-        runBlocking {
-            sdkSettings.savePushExpressExternalId(externalId)
-        }
-    }
-
-    fun activate() {
+    suspend fun activate() {
         Log.d(SDK_TAG, "Activate called, workflowActivated: $workflowActivated")
         if (workflowActivated) {
             Log.d(SDK_TAG, "Already activated")
@@ -61,21 +48,18 @@ object SdkPushExpress {
         }
     }
 
-    fun deactivate() {
+    suspend fun deactivate() {
         workflowActivated = false
-        runBlocking {
-            try {
-                sdkApi.stopApiLoop()
-            } catch (e: Exception) {
-                Log.e(SDK_TAG, "Error in stopApiLoop: ${e.message}")
-            }
+        try {
+            sdkApi.stopApiLoop()
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Error in stopApiLoop: ${e.message}")
         }
-        scope.coroutineContext.cancelChildren()
     }
 
-    fun getInstanceToken() = runBlocking { sdkSettings.getSdkSettings().instanceToken }
+    suspend fun getInstanceToken(): String = sdkSettings.getSdkSettings().instanceToken
 
-    fun getAppId() = runBlocking { sdkSettings.getSdkSettings().appId }
+    suspend fun getAppId(): String = sdkSettings.getSdkSettings().appId 
 
-    fun getExternalId() = runBlocking { sdkSettings.getSdkSettings().extId }
+    suspend fun getExternalId(): String = sdkSettings.getSdkSettings().extId
 }
