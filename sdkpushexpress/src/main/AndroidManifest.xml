@@ -15,15 +15,6 @@
                 android:value="androidx.startup" />
         </provider>
 
-        <service
-            android:name="com.pushexpress.sdk.fcm.FcmService"
-            android:exported="false"
-            tools:node="merge">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-
         <receiver
             android:name="com.pushexpress.sdk.notification_actions.NotificationClickBroadcastReceiver"
             android:enabled="true"
