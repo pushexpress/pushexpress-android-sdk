@@ -30,6 +30,11 @@ object SdkPushExpress {
         sdkSettings.savePushExpressExternalId(externalId)
     }
 
+    suspend fun setFirebaseToken(token: String) {
+        sdkApi.saveFirebaseToken(token)
+        Log.d(SDK_TAG, "Firebase token set successfully")
+    }
+
     suspend fun activate() {
         Log.d(SDK_TAG, "Activate called, workflowActivated: $workflowActivated")
         if (workflowActivated) {

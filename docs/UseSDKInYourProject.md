@@ -13,6 +13,10 @@ Push.Express SDK dependencies should be added to your project and you should hav
 2. Add code to your Android Studio app
    ```kotlin
    import com.pushexpress.sdk.main.SdkPushExpress
+   import com.google.firebase.messaging.FirebaseMessaging
+   import kotlinx.coroutines.CoroutineScope
+   import kotlinx.coroutines.Dispatchers
+   import kotlinx.coroutines.launch
 
    const val PUSHEXPRESS_APP_ID = "####-######"
 
@@ -20,19 +24,64 @@ Push.Express SDK dependencies should be added to your project and you should hav
        override fun onCreate(savedInstanceState: Bundle?) {
            super.onCreate(savedInstanceState)
 
-           SdkPushExpress.initialize(PUSHEXPRESS_APP_ID)
-           SdkPushExpress.setExternalId("<some_external_id>") // optional
-           SdkPushExpress.activate() // Don't forget to activate SDK workflow!
+           // Initialize SDK
+           CoroutineScope(Dispatchers.Main).launch {
+               SdkPushExpress.initialize(PUSHEXPRESS_APP_ID)
+               SdkPushExpress.setExternalId("<some_external_id>") // optional
+               
+               // Get Firebase token and pass it to SDK
+               FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                   if (task.isSuccessful) {
+                       val token = task.result
+                       CoroutineScope(Dispatchers.IO).launch {
+                           SdkPushExpress.setFirebaseToken(token)
+                           SdkPushExpress.activate() // Activate after setting the token
+                       }
+                   } else {
+                       Log.e("MyApp", "Failed to get Firebase token", task.exception)
+                   }
+               }
 
-           Log.d("Myapp", "App Instance Token: " +
-                   SdkPushExpress.getInstanceToken())
-           Log.d("Myapp", "App External ID: " +
-                   SdkPushExpress.getExternalId())
+               Log.d("Myapp", "App Instance Token: ${SdkPushExpress.getInstanceToken()}")
+               Log.d("Myapp", "App External ID: ${SdkPushExpress.getExternalId()}")
+           }
        }
    }
    ```
 
-3. Ask for notification permissions
+3. Handle Firebase token refresh in your FirebaseMessagingService
+   
+   Create a service to handle token updates:
+   ```kotlin
+   import com.google.firebase.messaging.FirebaseMessagingService
+   import com.pushexpress.sdk.main.SdkPushExpress
+   import kotlinx.coroutines.CoroutineScope
+   import kotlinx.coroutines.Dispatchers
+   import kotlinx.coroutines.launch
+
+   class MyFirebaseMessagingService : FirebaseMessagingService() {
+       override fun onNewToken(token: String) {
+           super.onNewToken(token)
+           // Update token in Push.Express SDK
+           CoroutineScope(Dispatchers.IO).launch {
+               SdkPushExpress.setFirebaseToken(token)
+           }
+       }
+   }
+   ```
+   
+   Register it in your AndroidManifest.xml:
+   ```xml
+   <service
+       android:name=".MyFirebaseMessagingService"
+       android:exported="false">
+       <intent-filter>
+           <action android:name="com.google.firebase.MESSAGING_EVENT" />
+       </intent-filter>
+   </service>
+   ```
+
+4. Ask for notification permissions
 
    ```kotlin
    // ...

@@ -16,15 +16,11 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.ktx.messaging
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.main.SdkPushExpress.workflowActivated
 import com.pushexpress.sdk.models.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 internal class ApiRepositoryImpl(
     private val context: Context,
@@ -343,10 +339,11 @@ internal class ApiRepositoryImpl(
     }
     
     val sdkSettings = settingsRepository.getSdkSettings()
-    val firebaseToken = if (sdkSettings.firebaseToken.isEmpty()) {
-        getFirebaseToken()
-    } else {
-        sdkSettings.firebaseToken
+    val firebaseToken = sdkSettings.firebaseToken
+    
+    if (firebaseToken.isEmpty()) {
+        if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, 
+            "⚠️ Firebase token is empty. Call SdkPushExpress.setFirebaseToken() to set it.")
     }
 
     val areNotificationsEnabled = areNotificationsEnabled()
@@ -398,20 +395,6 @@ internal class ApiRepositoryImpl(
         }
     }
 
-    private suspend fun getFirebaseToken(): String {
-        return suspendCoroutine { continuation ->
-            Firebase.messaging.token.addOnCompleteListener {
-                if (it.isSuccessful) {
-                    if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG,
-                        "getFirebaseToken: token=${it.result}")
-                    saveFirebaseToken(it.result)
-                    continuation.resume(it.result)
-                } else {
-                    continuation.resume("")
-                }
-            }
-        }
-    }
 
     private fun getCountrySim(): String {
         val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
