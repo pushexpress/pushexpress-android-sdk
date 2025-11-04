@@ -7,13 +7,20 @@ import com.google.firebase.messaging.RemoteMessage
 import com.pushexpress.sdk.BuildConfig
 import com.pushexpress.sdk.main.SDK_TAG
 import com.pushexpress.sdk.main.SdkPushExpress
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 open class FcmService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
 
         if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "onNewToken: token=${token}")
-        SdkPushExpress.sdkApi.saveFirebaseToken(token)
+        
+        // Update token in SDK
+        CoroutineScope(Dispatchers.IO).launch {
+            SdkPushExpress.setFirebaseToken(token)
+        }
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

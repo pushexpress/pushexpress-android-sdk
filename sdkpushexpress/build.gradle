@@ -62,6 +62,9 @@ dependencies {
     implementation "androidx.datastore:datastore-preferences:1.0.0"
     implementation('io.coil-kt:coil:2.4.0')
 
+    // Firebase dependencies (compileOnly - must be provided by the app)
+    compileOnly platform('com.google.firebase:firebase-bom:32.1.0')
+    compileOnly 'com.google.firebase:firebase-messaging-ktx'
 }
 
 afterEvaluate {
