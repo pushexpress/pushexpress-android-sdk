@@ -54,6 +54,7 @@ Push.Express SDK dependencies should be added to your project and you should hav
    Create a service to handle token updates:
    ```kotlin
    import com.google.firebase.messaging.FirebaseMessagingService
+   import com.google.firebase.messaging.RemoteMessage
    import com.pushexpress.sdk.main.SdkPushExpress
    import kotlinx.coroutines.CoroutineScope
    import kotlinx.coroutines.Dispatchers
@@ -65,6 +66,14 @@ Push.Express SDK dependencies should be added to your project and you should hav
            // Update token in Push.Express SDK
            CoroutineScope(Dispatchers.IO).launch {
                SdkPushExpress.setFirebaseToken(token)
+           }
+       }
+       
+       override fun onMessageReceived(remoteMessage: RemoteMessage) {
+           super.onMessageReceived(remoteMessage)
+           // Show notification using Push.Express SDK
+           if (remoteMessage.data.isNotEmpty()) {
+               SdkPushExpress.showNotification(remoteMessage.data)
            }
        }
    }

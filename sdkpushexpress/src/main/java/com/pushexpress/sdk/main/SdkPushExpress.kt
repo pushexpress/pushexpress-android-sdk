@@ -35,6 +35,10 @@ object SdkPushExpress {
         Log.d(SDK_TAG, "Firebase token set successfully")
     }
 
+    fun showNotification(data: Map<String, String>) {
+        notificationDrawer.showNotification(data)
+    }
+
     suspend fun activate() {
         Log.d(SDK_TAG, "Activate called, workflowActivated: $workflowActivated")
         if (workflowActivated) {
