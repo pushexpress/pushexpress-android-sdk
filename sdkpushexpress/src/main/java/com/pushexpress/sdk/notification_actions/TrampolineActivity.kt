@@ -13,6 +13,7 @@ import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
 import com.pushexpress.sdk.notification.NotificationDrawerImpl.Companion.EXTRA_PX_MSG_ID
 import com.pushexpress.sdk.notification.NotificationDrawerImpl.Companion.EXTRA_PX_LINK
+import com.pushexpress.sdk.notification_actions.startDefaultActivity
 class TrampolineActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

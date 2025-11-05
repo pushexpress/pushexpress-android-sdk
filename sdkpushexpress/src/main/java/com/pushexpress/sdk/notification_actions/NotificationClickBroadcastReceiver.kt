@@ -13,6 +13,7 @@ import com.pushexpress.sdk.notification.NotificationDrawerImpl.Companion.EXTRA_P
 import com.pushexpress.sdk.notification.NotificationDrawerImpl.Companion.EXTRA_PX_LINK
 import com.pushexpress.sdk.main.SdkPushExpress
 import com.pushexpress.sdk.models.NotificationEvent
+import com.pushexpress.sdk.notification_actions.startDefaultActivity
 
 class NotificationClickBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
