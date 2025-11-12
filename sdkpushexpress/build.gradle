@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.pushexpress.sdk'
-version = '1.4.0'
+version = '1.4.1'
 
 android {
     namespace 'com.pushexpress.sdk'
@@ -14,7 +14,7 @@ android {
     defaultConfig {
         minSdk 23
         targetSdk 33
-        versionCode 14
+        versionCode 15
         versionName project.version
         buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
