@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.RingtoneManager
 import android.os.Build
@@ -87,10 +88,15 @@ internal class NotificationDrawerImpl (
             .setContentTitle(data.getOrElse(PX_TITLE_KEY) { "empty_title" })
             .setContentText(data.getOrElse(PX_BODY_KEY) { "empty_body" })
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-            .setSmallIcon(androidx.loader.R.drawable.notification_icon_background)
+            .setSmallIcon(getNotificationIcon(context))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setStyle(NotificationCompat.BigTextStyle())
+
+        // Set icon color if specified in metadata
+        getNotificationColor(context)?.let { 
+            notificationBuilder.setColor(it) 
+        }
 
         iconBmp?.let {notificationBuilder
             .setLargeIcon(iconBmp) }
@@ -123,6 +129,80 @@ internal class NotificationDrawerImpl (
         notificationManager.notify(notificationId, notificationBuilder.build())
     }
 
+    /**
+     * Gets notification icon from AndroidManifest.xml metadata
+     * If not specified, uses application icon as fallback
+     */
+    private fun getNotificationIcon(context: Context): Int {
+        return try {
+            val ai = context.packageManager.getApplicationInfo(
+                context.packageName,
+                PackageManager.GET_META_DATA
+            )
+            val metaData = ai.metaData
+            if (metaData != null && metaData.containsKey(METADATA_NOTIFICATION_ICON)) {
+                val iconResId = metaData.getInt(METADATA_NOTIFICATION_ICON)
+                if (iconResId != 0) {
+                    if (BuildConfig.LOG_DEBUG) {
+                        Log.d(SDK_TAG, "Using notification icon from metadata: $iconResId")
+                    }
+                    return iconResId
+                }
+            }
+            // Fallback: use application icon
+            val appIcon = context.applicationInfo.icon
+            if (appIcon != 0) {
+                if (BuildConfig.LOG_DEBUG) {
+                    Log.d(SDK_TAG, "Using application icon: $appIcon")
+                }
+                appIcon
+            } else {
+                if (BuildConfig.LOG_DEBUG) {
+                    Log.d(SDK_TAG, "Using default system icon")
+                }
+                android.R.drawable.ic_dialog_info
+            }
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Error getting notification icon from metadata", e)
+            // Fallback to application icon or system icon
+            context.applicationInfo.icon.takeIf { it != 0 } 
+                ?: android.R.drawable.ic_dialog_info
+        }
+    }
+
+    /**
+     * Gets notification icon color from AndroidManifest.xml metadata
+     * If not specified, returns null (system will use default color)
+     */
+    private fun getNotificationColor(context: Context): Int? {
+        return try {
+            val ai = context.packageManager.getApplicationInfo(
+                context.packageName,
+                PackageManager.GET_META_DATA
+            )
+            val metaData = ai.metaData
+            if (metaData != null && metaData.containsKey(METADATA_NOTIFICATION_COLOR)) {
+                val colorResId = metaData.getInt(METADATA_NOTIFICATION_COLOR)
+                if (colorResId != 0) {
+                    val color = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        context.resources.getColor(colorResId, context.theme)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        context.resources.getColor(colorResId)
+                    }
+                    if (BuildConfig.LOG_DEBUG) {
+                        Log.d(SDK_TAG, "Using notification color from metadata: $color")
+                    }
+                    return color
+                }
+            }
+            null
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Error getting notification color from metadata", e)
+            null
+        }
+    }
+
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "sdkpushexpress_notification_channel"
         private const val NOTIFICATION_CHANNEL_NAME = "Default"
@@ -135,5 +215,9 @@ internal class NotificationDrawerImpl (
         private const val PX_LINK_KEY = "px.link"
         const val EXTRA_PX_MSG_ID = "EXTRA_PX_MSG_ID"
         const val EXTRA_PX_LINK = "EXTRA_PX_LINK"
+        
+        // Metadata keys for configuring notification icon via AndroidManifest.xml
+        private const val METADATA_NOTIFICATION_ICON = "com.pushexpress.sdk.default_notification_icon"
+        private const val METADATA_NOTIFICATION_COLOR = "com.pushexpress.sdk.default_notification_color"
     }
 }
