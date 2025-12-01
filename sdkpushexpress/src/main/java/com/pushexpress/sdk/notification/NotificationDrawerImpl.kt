@@ -98,8 +98,12 @@ internal class NotificationDrawerImpl (
             notificationBuilder.setColor(it) 
         }
 
-        iconBmp?.let {notificationBuilder
-            .setLargeIcon(iconBmp) }
+        // Set large icon: use px.icon if available, otherwise use default from metadata
+        val largeIcon = iconBmp ?: getDefaultLargeIcon(context)
+        largeIcon?.let { 
+            notificationBuilder.setLargeIcon(it) 
+        }
+        
         imageBmp?.let{notificationBuilder
             .setStyle(NotificationCompat.BigPictureStyle().bigPicture(imageBmp))}
 
@@ -171,6 +175,40 @@ internal class NotificationDrawerImpl (
     }
 
     /**
+     * Gets default large icon from AndroidManifest.xml metadata
+     * If not specified, returns null (will use app icon or no large icon)
+     */
+    private fun getDefaultLargeIcon(context: Context): Bitmap? {
+        return try {
+            val ai = context.packageManager.getApplicationInfo(
+                context.packageName,
+                PackageManager.GET_META_DATA
+            )
+            val metaData = ai.metaData
+            if (metaData != null && metaData.containsKey(METADATA_NOTIFICATION_LARGE_ICON)) {
+                val iconResId = metaData.getInt(METADATA_NOTIFICATION_LARGE_ICON)
+                if (iconResId != 0) {
+                    val drawable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        context.resources.getDrawable(iconResId, context.theme)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        context.resources.getDrawable(iconResId)
+                    }
+                    val bitmap = drawable?.toBitmap()
+                    if (BuildConfig.LOG_DEBUG && bitmap != null) {
+                        Log.d(SDK_TAG, "Using default large icon from metadata: $iconResId")
+                    }
+                    return bitmap
+                }
+            }
+            null
+        } catch (e: Exception) {
+            Log.e(SDK_TAG, "Error getting default large icon from metadata", e)
+            null
+        }
+    }
+
+    /**
      * Gets notification icon color from AndroidManifest.xml metadata
      * If not specified, returns null (system will use default color)
      */
@@ -216,8 +254,9 @@ internal class NotificationDrawerImpl (
         const val EXTRA_PX_MSG_ID = "EXTRA_PX_MSG_ID"
         const val EXTRA_PX_LINK = "EXTRA_PX_LINK"
         
-        // Metadata keys for configuring notification icon via AndroidManifest.xml
+        // Metadata keys for configuring notification icons via AndroidManifest.xml
         private const val METADATA_NOTIFICATION_ICON = "com.pushexpress.sdk.default_notification_icon"
+        private const val METADATA_NOTIFICATION_LARGE_ICON = "com.pushexpress.sdk.default_notification_large_icon"
         private const val METADATA_NOTIFICATION_COLOR = "com.pushexpress.sdk.default_notification_color"
     }
 }
