@@ -47,7 +47,7 @@ internal class ApiRepositoryImpl(
         try {
             val res = retryHttpIO(times = 10) { createAndSendDeviceConfig() }
             repeatRequestDevices(120)
-            repeatRequestHeartBeat(30)
+            repeatRequestHeartBeat(60)
         } catch (e: Exception) {
             if (BuildConfig.LOG_RELEASE) Log.d(SDK_TAG, "ApiLoop: unhandled error: $e")
         }
@@ -220,13 +220,14 @@ internal class ApiRepositoryImpl(
     fun getEventQueueSize(): Int = eventQueue.size
 
     private fun repeatRequestDevices(timeSec: Long) {
+        devicesJob.cancel()
         devicesJob = scope.launch {
             try {
                  while (isActive) {
                     if (BuildConfig.LOG_DEBUG) Log.d(SDK_TAG, "repeatRequestDevices")
                     delay(timeSec * 1000)
                     if (isActive) {
-                        doApiLoop()
+                        retryHttpIO(times = 10) { createAndSendDeviceConfig() }
                     }
                  }
             }  catch (e: CancellationException) {
@@ -238,6 +239,7 @@ internal class ApiRepositoryImpl(
     }
 
     private fun repeatRequestHeartBeat(timeSec: Long) {
+    heartBeatsJob.cancel()
     heartBeatsJob = scope.launch {
         try {
             while (isActive) {
